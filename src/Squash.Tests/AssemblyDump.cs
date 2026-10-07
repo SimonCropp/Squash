@@ -6,7 +6,7 @@
 public static class AssemblyDump
 {
     // Emitted by the compiler on almost every member, and never what a snapshot is about.
-    static readonly HashSet<string> noise =
+    static HashSet<string> noise =
     [
         "CompilerGenerated",
         "DebuggerHidden",
@@ -77,7 +77,7 @@ public static class AssemblyDump
     }
 
     // The kinds of custom debug information a portable pdb carries, by the GUIDs the format assigns.
-    static readonly Dictionary<Guid, string> symbolKinds = new()
+    static Dictionary<Guid, string> symbolKinds = new()
     {
         [new("cc110556-a091-4d38-9fec-25ab9a351a6a")] = "SourceLink",
         [new("0e8a571b-6926-466e-b4ad-8ab04611f5fe")] = "EmbeddedSource",

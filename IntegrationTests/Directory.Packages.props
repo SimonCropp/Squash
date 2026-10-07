@@ -8,7 +8,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="ProjectDefaults" Version="1.0.184" />
     <PackageVersion Include="TUnit" Version="1.72.16" />
-    <PackageVersion Include="Verify" Version="33.3.1" />
-    <PackageVersion Include="Verify.TUnit" Version="33.3.1" />
+    <PackageVersion Include="Verify" Version="33.3.2-beta.1" />
+    <PackageVersion Include="Verify.TUnit" Version="33.3.2-beta.1" />
   </ItemGroup>
 </Project>

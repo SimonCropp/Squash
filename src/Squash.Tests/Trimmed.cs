@@ -94,9 +94,9 @@ public sealed class Trimmed :
 /// </summary>
 public static class Trims
 {
-    static readonly ConcurrentDictionary<string, Lazy<Trimmed>> cache = new();
+    static ConcurrentDictionary<string, Lazy<Trimmed>> cache = new();
 
-    public static readonly string[] Frameworks = ["netstandard2.0", "net48", "net10.0"];
+    public static string[] Frameworks = ["netstandard2.0", "net48", "net10.0"];
 
     public static string Roots(string framework) =>
         Path.Combine(TestEnvironment.Fixture("Scenarios", framework), "roots.xml");

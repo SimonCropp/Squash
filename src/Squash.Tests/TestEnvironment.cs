@@ -1,6 +1,6 @@
 public static class TestEnvironment
 {
-    static readonly Lazy<string> repoRoot = new(FindRepoRoot);
+    static Lazy<string> repoRoot = new(FindRepoRoot);
 
     public static string RepoRoot => repoRoot.Value;
 

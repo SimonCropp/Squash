@@ -8,7 +8,7 @@ static class HiddenFriends
     static AssemblyDefinition? assembly;
 
     // Ascending by original position, so inserting in order lands each attribute where it was.
-    static readonly List<(int Index, CustomAttribute Attribute)> hidden = [];
+    static List<(int Index, CustomAttribute Attribute)> hidden = [];
 
     public static bool IsInternalsVisibleTo(CustomAttribute attribute)
     {

@@ -1,7 +1,5 @@
 namespace Squash;
 
-public readonly record struct PeSection(int RawPointer, int RawSize, int VirtualAddress, int VirtualSize);
-
 /// <summary>
 /// The few PE and CLI header fields strong-name signing needs, as offsets into the file. Read by
 /// hand: the task assembly has no dependencies, and System.Reflection.Metadata is not part of
