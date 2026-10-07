@@ -3,8 +3,7 @@
 [![Build status](https://github.com/SimonCropp/Squash/actions/workflows/build.yml/badge.svg)](https://github.com/SimonCropp/Squash/actions/workflows/build.yml)
 [![NuGet Status](https://img.shields.io/nuget/v/Squash.svg)](https://www.nuget.org/packages/Squash/)
 
-Removes unreachable IL from a library at build time. The public surface is untouched; non-public types and members that nothing reaches are trimmed. The trimming is done by the
-[.NET IL linker](https://github.com/dotnet/runtime/tree/main/src/tools/illink), the tool behind `PublishTrimmed`, run unmodified against the one assembly.
+Removes unreachable IL from a library at build time. The public surface is untouched; non-public types and members that nothing reaches are trimmed. The trimming is done by the [.NET IL linker](https://github.com/dotnet/runtime/tree/main/src/tools/illink), the tool behind `PublishTrimmed`, run unmodified against the one assembly.
 
 **See [Milestones](../../milestones?state=closed) for release notes.**
 
@@ -20,7 +19,7 @@ A library that uses four APIs from [Polyfill](https://github.com/SimonCropp/Poly
 | `netstandard2.0` | 212,992 bytes | 11,776 bytes |
 | `net10.0` | 79,872 bytes | 8,704 bytes |
 
-dotnet/runtime trims its own libraries the same way as it builds them, with the same linker in the same mode. Squash packages that for any library.
+dotnet/runtime [trims its own libraries the same way](https://github.com/dotnet/runtime/blob/f5f66b5f3ceadcd7daca3098b48ba5c8930f01f7/eng/illink.targets#L202) as it builds them, with the same linker in the same mode. Squash packages that for any library.
 
 
 ## Usage
@@ -191,4 +190,4 @@ Linker patches arrive through Dependabot and are merged once the tests pass. The
 
 ## Icon
 
-A placeholder, to be replaced.
+[Squash](https://thenounproject.com/icon/squash-5884986/) from [The Noun Project](https://thenounproject.com)
