@@ -84,16 +84,6 @@
       <_Squash_NoWarn>$(NoWarn.Replace(';', ','))</_Squash_NoWarn>
       <_Squash_WarningsNotAsErrors>$(WarningsNotAsErrors.Replace(';', ','))</_Squash_WarningsNotAsErrors>
 
-      <!-- What the friend assemblies use of this one, as a root descriptor: written when
-           SquashFriendRoots is Update, kept with the project, and read by every trim that ignores
-           InternalsVisibleTo. One file for each target framework, since a descriptor may name only
-           what the assembly it is used with contains, and the frameworks differ. -->
-      <_Squash_FriendRootsFile>$(SquashFriendRootsFile)</_Squash_FriendRootsFile>
-      <_Squash_FriendRootsFile Condition="'$(_Squash_FriendRootsFile)' == ''">FriendRoots/$(TargetFramework).xml</_Squash_FriendRootsFile>
-      <_Squash_FriendRootsFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_Squash_FriendRootsFile)'))</_Squash_FriendRootsFile>
-      <_Squash_UpdateFriendRoots>false</_Squash_UpdateFriendRoots>
-      <_Squash_UpdateFriendRoots Condition="'$(SquashFriendRoots)' == 'Update'">true</_Squash_UpdateFriendRoots>
-
       <!-- An executable's entry point is usually private, and rooting the public surface alone
            would trim it away. -->
       <_Squash_RootEntryPoint>false</_Squash_RootEntryPoint>
@@ -129,8 +119,6 @@
                              RootEntryPoint=$(_Squash_RootEntryPoint);
                              ExtraArgs=$(SquashExtraArgs);
                              RootDescriptors=$(_Squash_RootDescriptors);
-                             FriendRootsFile=$(_Squash_FriendRootsFile);
-                             UpdateFriendRoots=$(_Squash_UpdateFriendRoots);
                              KeyFile=$(_Squash_KeyFile);
                              KeyContainer=$(KeyContainerName)"
                       Overwrite="true"
@@ -139,7 +127,6 @@
     <ItemGroup>
       <CustomAdditionalCompileInputs Include="$(_Squash_InputsFile)" />
       <CustomAdditionalCompileInputs Include="@(SquashRootDescriptor->'%(FullPath)')" />
-      <CustomAdditionalCompileInputs Include="$(_Squash_FriendRootsFile)" Condition="Exists('$(_Squash_FriendRootsFile)')" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(_Squash_Enabled)' == 'true'">
@@ -175,17 +162,6 @@
     point (copy to bin, pack, a referencing project) sees only the trimmed assembly.
   -->
   <Target Name="SquashAssembly">
-    <!-- Only when the friend roots are being written, and only where the project names no friend
-         assemblies itself: everything the projects beside this one have built in this
-         configuration. The step keeps the ones this assembly names in InternalsVisibleTo. -->
-    <PropertyGroup Condition="'$(_Squash_UpdateFriendRoots)' == 'true'">
-      <_Squash_FriendSearchPath>$(SquashFriendSearchPath)</_Squash_FriendSearchPath>
-      <_Squash_FriendSearchPath Condition="'$(_Squash_FriendSearchPath)' == ''">$(MSBuildProjectDirectory)/..</_Squash_FriendSearchPath>
-    </PropertyGroup>
-    <ItemGroup Condition="'$(_Squash_UpdateFriendRoots)' == 'true' and '@(SquashFriendAssembly)' == ''">
-      <SquashFriendAssembly Include="$(_Squash_FriendSearchPath)/**/bin/$(Configuration)/**/*.dll;$(_Squash_FriendSearchPath)/**/bin/$(Configuration)/**/*.exe" />
-    </ItemGroup>
-
     <SquashTask AssemblyFile="@(IntermediateAssembly->'%(FullPath)')"
                 AssemblyName="$(AssemblyName)"
                 SymbolsFile="@(_DebugSymbolsIntermediatePath->'%(FullPath)')"
@@ -202,10 +178,7 @@
                 RootEntryPoint="$(_Squash_RootEntryPoint)"
                 ExtraArgs="$(SquashExtraArgs)"
                 KeyFile="$(_Squash_KeyFile)"
-                KeyContainer="$(KeyContainerName)"
-                FriendAssemblies="@(SquashFriendAssembly)"
-                FriendRootsFile="$(_Squash_FriendRootsFile)"
-                UpdateFriendRoots="$(_Squash_UpdateFriendRoots)" />
+                KeyContainer="$(KeyContainerName)" />
 
     <Touch Files="$(_Squash_StampFile)" AlwaysCreate="true" />
 
