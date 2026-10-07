@@ -24,7 +24,7 @@ public class StrongNameTests
         // Nothing of Squash's signed this file. If the hash here were computed over anything but
         // what the compiler hashed, its signature would not verify.
         var path = Fixture("Signed", framework);
-        await Assert.That(StrongName.Verify(File.ReadAllBytes(path), PublicKey(path))).IsTrue();
+        await Assert.That(StrongName.Verify(await File.ReadAllBytesAsync(path), PublicKey(path))).IsTrue();
     }
 
     [Test]
@@ -35,7 +35,7 @@ public class StrongNameTests
         // RSA PKCS#1 v1.5 has no randomness, so the same key over the same content gives the same
         // bytes: the whole file must come back identical.
         var path = Fixture("Signed", framework);
-        var original = File.ReadAllBytes(path);
+        var original = await File.ReadAllBytesAsync(path);
         var image = WithEmptySignature(original);
         await Assert.That(StrongName.Verify(image, PublicKey(path))).IsFalse();
 
@@ -48,7 +48,7 @@ public class StrongNameTests
     public async Task ATamperedImageDoesNotVerify()
     {
         var path = Fixture("Signed", "netstandard2.0");
-        var image = File.ReadAllBytes(path);
+        var image = await File.ReadAllBytesAsync(path);
         image[^1] ^= 0xFF;
         await Assert.That(StrongName.Verify(image, PublicKey(path))).IsFalse();
     }
@@ -56,11 +56,11 @@ public class StrongNameTests
     [Test]
     public async Task OnlyARealSignatureCountsAsSigned()
     {
-        await Assert.That(StrongName.IsSigned(File.ReadAllBytes(Fixture("Signed", "netstandard2.0")))).IsTrue();
+        await Assert.That(StrongName.IsSigned(await File.ReadAllBytesAsync(Fixture("Signed", "netstandard2.0")))).IsTrue();
 
         // Public-signed: the flag is set and the signature is zeros.
-        await Assert.That(StrongName.IsSigned(File.ReadAllBytes(Fixture("PublicSigned", "netstandard2.0")))).IsFalse();
-        await Assert.That(StrongName.IsSigned(File.ReadAllBytes(Fixture("Scenarios", "netstandard2.0")))).IsFalse();
+        await Assert.That(StrongName.IsSigned(await File.ReadAllBytesAsync(Fixture("PublicSigned", "netstandard2.0")))).IsFalse();
+        await Assert.That(StrongName.IsSigned(await File.ReadAllBytesAsync(Fixture("Scenarios", "netstandard2.0")))).IsFalse();
     }
 
     [Test]
@@ -68,7 +68,7 @@ public class StrongNameTests
     {
         var path = Fixture("Signed", "netstandard2.0");
         using var other = new RSACryptoServiceProvider(2048);
-        var image = WithEmptySignature(File.ReadAllBytes(path));
+        var image = WithEmptySignature(await File.ReadAllBytesAsync(path));
 
         var exception = Assert.Throws<SquashException>(() => StrongName.Sign(image, PublicKey(path), other.ExportCspBlob(true)));
 
@@ -81,7 +81,7 @@ public class StrongNameTests
         var path = Fixture("Signed", "netstandard2.0");
         using var rsa = new RSACryptoServiceProvider();
         rsa.ImportCspBlob(Key);
-        var image = WithEmptySignature(File.ReadAllBytes(path));
+        var image = WithEmptySignature(await File.ReadAllBytesAsync(path));
 
         var exception = Assert.Throws<SquashException>(() => StrongName.Sign(image, PublicKey(path), rsa.ExportCspBlob(false)));
 
@@ -95,10 +95,10 @@ public class StrongNameTests
     public async Task ThePeReaderAgreesWithSystemReflectionMetadata(string name, string framework)
     {
         var path = Fixture(name, framework);
-        var image = File.ReadAllBytes(path);
+        var image = await File.ReadAllBytesAsync(path);
         var mine = PeFile.Read(image);
 
-        using var stream = File.OpenRead(path);
+        await using var stream = File.OpenRead(path);
         using var pe = new PEReader(stream);
         var headers = pe.PEHeaders;
         var cor = headers.CorHeader!;

@@ -21,6 +21,8 @@ public class SquashTask :
     public string InternalsVisibleTo { get; set; } = "";
     public string Preserve { get; set; } = "";
     public string TreatWarningsAsErrors { get; set; } = "";
+    public string NoWarn { get; set; } = "";
+    public string WarningsNotAsErrors { get; set; } = "";
     public string RootEntryPoint { get; set; } = "";
     public string ExtraArgs { get; set; } = "";
     public string KeyFile { get; set; } = "";
@@ -110,6 +112,8 @@ public class SquashTask :
             IgnoreInternalsVisibleTo = !Is(InternalsVisibleTo, "Honor"),
             KeepDataShape = Is(Preserve, "DataShape"),
             WarningsAsErrors = Is(TreatWarningsAsErrors, "true"),
+            NoWarn = ResponseFile.LinkerCodes(NoWarn),
+            WarningsNotAsErrors = ResponseFile.LinkerCodes(WarningsNotAsErrors),
             RootEntryPoint = Is(RootEntryPoint, "true"),
             ExtraArgs = ExtraArgs
         };

@@ -16,6 +16,8 @@ public sealed class SquashRequest
     public bool IgnoreInternalsVisibleTo { get; init; }
     public bool KeepDataShape { get; init; }
     public bool WarningsAsErrors { get; init; }
+    public IReadOnlyList<string> NoWarn { get; init; } = [];
+    public IReadOnlyList<string> WarningsNotAsErrors { get; init; } = [];
     public bool RootEntryPoint { get; init; }
     public string ExtraArgs { get; init; } = "";
 }

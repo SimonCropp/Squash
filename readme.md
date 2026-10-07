@@ -150,12 +150,24 @@ An assembly with no public types at all, shared entirely through `InternalsVisib
 
 Changing any of them compiles and trims again; nothing needs cleaning.
 
-`SquashExtraArgs` takes any [linker option](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md). Where one contradicts an argument Squash passes, the later one wins. For example `--enable-opt ipconstprop` turns constant folding back on.
+`SquashExtraArgs` takes any [linker option](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md). Where one contradicts an argument Squash passes, the later one wins. For example `--enable-opt ipconstprop` turns constant folding back on. More examples are in [docs/LinkerArguments.md](/docs/LinkerArguments.md).
 
 
 ## Linker warnings
 
-Where the linker cannot follow a piece of reflection it says so, with the `ILxxxx` codes and source locations it uses when trimming an application. They are build warnings, and `NoWarn`, `WarningsAsErrors` and `TreatWarningsAsErrors` apply to them as to any other.
+Where the linker cannot follow a piece of reflection it says so, with the `ILxxxx` codes and source locations it uses when trimming an application. They are build warnings, and `NoWarn`, `WarningsAsErrors`, `WarningsNotAsErrors` and `TreatWarningsAsErrors` apply to them as to any other.
+
+```xml
+<PropertyGroup>
+  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  <!-- Never reported. -->
+  <NoWarn>$(NoWarn);IL2026</NoWarn>
+  <!-- Reported, as a warning. -->
+  <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2070</WarningsNotAsErrors>
+</PropertyGroup>
+```
+
+With `TreatWarningsAsErrors` it is the linker that turns its warnings into errors, so Squash passes it the `ILxxxx` codes from `NoWarn` and `WarningsNotAsErrors`, as `--nowarn` and `--warnaserror-`. Only codes of that form are passed. Compiler, analyzer and NuGet codes in the same lists are left out, as is a bare number such as `1591`, which means `CS1591` to the compiler and would mean `IL1591` to the linker. `SquashTreatWarningsAsErrors` set to `false` leaves every linker warning a warning.
 
 A warning marks the code most likely to break, so each is worth reading once. Annotating the code ([Prepare .NET libraries for trimming](https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming)) fixes it for applications that trim as well.
 

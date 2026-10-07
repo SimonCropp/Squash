@@ -10,6 +10,10 @@ and any of them can be silenced per project:
 </PropertyGroup>
 ```
 
+`NoWarn` and `WarningsNotAsErrors` hold for a linker warning under `TreatWarningsAsErrors` too: Squash
+passes the `ILxxxx` codes in them to the linker. See
+[Linker warnings](/readme.md#linker-warnings).
+
 A linker warning marks code the linker could not follow, which is also the code most likely to break
 when something it reaches by reflection is trimmed. Silencing one is a statement that the members
 involved are kept some other way.

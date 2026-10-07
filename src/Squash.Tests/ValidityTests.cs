@@ -74,11 +74,11 @@ public class ValidityTests
         using var temp = new TempDirectory();
         var trimmed = Trims.Scenarios("netstandard2.0");
         var broken = temp.Combine("Scenarios.dll");
-        var image = File.ReadAllBytes(trimmed.Assembly);
+        var image = await File.ReadAllBytesAsync(trimmed.Assembly);
         var body = MethodBody(trimmed.Assembly, "Helper", "Used");
         var at = IndexOf(image, body);
         image[at + body.Length - 1] = 0x26;
-        File.WriteAllBytes(broken, image);
+        await File.WriteAllBytesAsync(broken, image);
 
         await Assert.That(Checks.IlErrors(broken, trimmed.References)).IsNotEmpty();
     }
@@ -131,7 +131,7 @@ public class ValidityTests
         using var first = Trimmed.Run("Scenarios", framework);
         using var second = Trimmed.Run("Scenarios", framework);
 
-        await Assert.That(File.ReadAllBytes(first.Assembly).SequenceEqual(File.ReadAllBytes(second.Assembly))).IsTrue();
-        await Assert.That(File.ReadAllBytes(first.Symbols).SequenceEqual(File.ReadAllBytes(second.Symbols))).IsTrue();
+        await Assert.That((await File.ReadAllBytesAsync(first.Assembly)).SequenceEqual(await File.ReadAllBytesAsync(second.Assembly))).IsTrue();
+        await Assert.That((await File.ReadAllBytesAsync(first.Symbols)).SequenceEqual(await File.ReadAllBytesAsync(second.Symbols))).IsTrue();
     }
 }

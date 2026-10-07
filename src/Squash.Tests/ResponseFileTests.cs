@@ -62,6 +62,8 @@ public class ResponseFileTests
             IgnoreInternalsVisibleTo = true,
             KeepDataShape = true,
             WarningsAsErrors = true,
+            NoWarn = ResponseFile.LinkerCodes("CS1591;IL2070, il2026\n  2057;NU1608;IL;ILLink;IL2070"),
+            WarningsNotAsErrors = ResponseFile.LinkerCodes("CS0618;IL2057"),
             RootEntryPoint = true,
             ExtraArgs = "  --enable-opt ipconstprop --verbose "
         };
@@ -88,6 +90,16 @@ public class ResponseFileTests
     }
 
     [Test]
+    public async Task OnlyLinkerCodesAreSuppressed()
+    {
+        // 2057 is how NoWarn spells CS2057, and the linker would take it for IL2057.
+        var codes = ResponseFile.LinkerCodes("CS1591;IL2070, il2026\n  2057;NU1608;IL;ILLink;IL2070");
+
+        await Assert.That(codes.SequenceEqual(["IL2026", "IL2070"])).IsTrue().Because(string.Join(", ", codes));
+        await Assert.That(ResponseFile.LinkerCodes("")).IsEmpty();
+    }
+
+    [Test]
     public async Task ATrailingBackslashDoesNotEscapeTheClosingQuote()
     {
         await Assert.That(ResponseFile.Quote(@"C:\obj\out\")).IsEqualTo("\"C:\\obj\\out\"");
@@ -99,7 +111,7 @@ public class ResponseFileTests
     {
         // Squash.Steps cannot be referenced from the task, so both spell the keys out. Read from its
         // metadata: loading it would need the linker it is compiled against.
-        using var stream = File.OpenRead(Path.Combine(TestEnvironment.LinkerDirectory, "Squash.Steps.dll"));
+        await using var stream = File.OpenRead(Path.Combine(TestEnvironment.LinkerDirectory, "Squash.Steps.dll"));
         using var pe = new PEReader(stream);
         var reader = pe.GetMetadataReader();
         var keys = reader.TypeDefinitions

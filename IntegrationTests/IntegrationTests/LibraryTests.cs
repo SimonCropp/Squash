@@ -205,6 +205,43 @@ public class LibraryTests
     }
 
     [Test]
+    public async Task NoWarnSilencesAWarningTheLinkerWouldPromote()
+    {
+        var properties = With("Reflective");
+        properties["TreatWarningsAsErrors"] = "true";
+
+        // A list, as a project has: the linker is given only its own code.
+        properties["NoWarn"] = "CS1591%3BIL2057";
+        var result = await Consumer.Build("Library", project, properties);
+
+        await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
+        await Assert.That(result.Cli.Combined).DoesNotContain("IL2057");
+        foreach (var framework in frameworks)
+        {
+            var arguments = await File.ReadAllLinesAsync(result.Squash("Lib", framework, "squash.rsp"));
+            await Assert.That(arguments).Contains("--nowarn IL2057");
+        }
+    }
+
+    [Test]
+    public async Task WarningsNotAsErrorsKeepsALinkerWarningAWarning()
+    {
+        var properties = With("Reflective");
+        properties["TreatWarningsAsErrors"] = "true";
+        properties["WarningsNotAsErrors"] = "CS0618%3BIL2057";
+        var result = await Consumer.Build("Library", project, properties);
+
+        await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
+        await Assert.That(result.Cli.Combined).Contains("warning IL2057");
+        await Assert.That(result.Cli.Combined).DoesNotContain("error IL2057");
+        foreach (var framework in frameworks)
+        {
+            var arguments = await File.ReadAllLinesAsync(result.Squash("Lib", framework, "squash.rsp"));
+            await Assert.That(arguments).Contains("--warnaserror- IL2057");
+        }
+    }
+
+    [Test]
     public async Task APathWithSpacesAndOtherAlphabets()
     {
         var work = Consumer.Prepare("Library", "with space ünïcödé 日本語");
