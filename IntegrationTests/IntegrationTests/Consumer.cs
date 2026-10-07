@@ -47,7 +47,7 @@ public static class Consumer
         return work;
     }
 
-    public static async Task<BuildResult> Build(
+    public static Task<BuildResult> Build(
         string fixture,
         string project,
         IReadOnlyDictionary<string, string>? properties = null,
@@ -55,7 +55,7 @@ public static class Consumer
         [CallerMemberName] string caller = "")
     {
         var work = Prepare(fixture, caller);
-        return await Rebuild(work, project, properties, configuration);
+        return Rebuild(work, project, properties, configuration);
     }
 
     /// <summary>
