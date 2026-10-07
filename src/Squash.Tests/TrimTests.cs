@@ -372,8 +372,9 @@ public class TrimTests
     {
         var trimmed = Trims.Scenarios("netstandard2.0");
         var kept = await File.ReadAllBytesAsync(Path.Combine(trimmed.Directory, "in", "Scenarios.dll"));
+        var original = await File.ReadAllBytesAsync(trimmed.Original);
 
-        await Assert.That(kept.SequenceEqual(await File.ReadAllBytesAsync(trimmed.Original))).IsTrue();
+        await Assert.That(kept.SequenceEqual(original)).IsTrue();
         await Assert.That(new FileInfo(trimmed.Assembly).Length).IsLessThan(kept.Length);
     }
 }

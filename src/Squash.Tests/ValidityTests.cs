@@ -131,7 +131,12 @@ public class ValidityTests
         using var first = Trimmed.Run("Scenarios", framework);
         using var second = Trimmed.Run("Scenarios", framework);
 
-        await Assert.That((await File.ReadAllBytesAsync(first.Assembly)).SequenceEqual(await File.ReadAllBytesAsync(second.Assembly))).IsTrue();
-        await Assert.That((await File.ReadAllBytesAsync(first.Symbols)).SequenceEqual(await File.ReadAllBytesAsync(second.Symbols))).IsTrue();
+        var firstAssembly = await File.ReadAllBytesAsync(first.Assembly);
+        var secondAssembly = await File.ReadAllBytesAsync(second.Assembly);
+        var firstSymbols = await File.ReadAllBytesAsync(first.Symbols);
+        var secondSymbols = await File.ReadAllBytesAsync(second.Symbols);
+
+        await Assert.That(firstAssembly.SequenceEqual(secondAssembly)).IsTrue();
+        await Assert.That(firstSymbols.SequenceEqual(secondSymbols)).IsTrue();
     }
 }
