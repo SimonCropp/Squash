@@ -27,9 +27,7 @@ public class Shape
 // annotated, so the linker keeps the converter's members. On netstandard2.0 and .NET Framework
 // nothing is annotated: the type stays and its constructor goes.
 [TypeConverter(typeof(ShapeConverter))]
-public class Converted
-{
-}
+public class Converted;
 
 class ShapeConverter :
     TypeConverter

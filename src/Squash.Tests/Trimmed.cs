@@ -60,7 +60,7 @@ public sealed class Trimmed :
             AssemblyName = fixture,
             IntermediateDirectory = trimmed.Directory,
             References = trimmed.References
-                .Select(_ => (ITaskItem)new TaskItem(_))
+                .Select(ITaskItem (_) => new TaskItem(_))
                 .ToArray(),
             LinkerDirectory = TestEnvironment.LinkerDirectory,
             DotNetHost = TestEnvironment.DotNetHost

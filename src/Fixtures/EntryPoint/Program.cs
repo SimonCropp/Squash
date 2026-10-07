@@ -7,6 +7,4 @@ static class Greeter
     public static string Unused() => "unused";
 }
 
-class Unused
-{
-}
+class Unused;

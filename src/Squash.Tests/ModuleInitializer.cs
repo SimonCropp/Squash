@@ -22,6 +22,6 @@ public static class ModuleInitializer
         // Most tests block a thread while a linker process runs, and the task reads that process's
         // output on further pool threads. Left to grow at its own pace the pool adds one thread a
         // second, and the suite spends most of its time waiting for them.
-        System.Threading.ThreadPool.SetMinThreads(64, 64);
+        ThreadPool.SetMinThreads(64, 64);
     }
 }

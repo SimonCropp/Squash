@@ -13,6 +13,4 @@ static class Helper
     public static string Unused() => "unused";
 }
 
-class Unused
-{
-}
+class Unused;

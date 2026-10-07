@@ -46,6 +46,7 @@ class UsedInternal
     {
     }
 
+    // ReSharper disable once UnusedParameter.Local
     public UsedInternal(int unused)
     {
     }
@@ -70,19 +71,11 @@ interface IInternalInterface
 
 public class Nesting
 {
-    public class PublicNested
-    {
-    }
+    public class PublicNested;
 
-    protected class ProtectedNested
-    {
-    }
+    protected class ProtectedNested;
 
-    internal class InternalNested
-    {
-    }
+    internal class InternalNested;
 
-    class PrivateNested
-    {
-    }
+    class PrivateNested;
 }

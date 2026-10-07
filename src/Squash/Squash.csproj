@@ -23,8 +23,12 @@
   <ItemGroup>
     <!-- ExcludeAssets=Runtime keeps the MSBuild assemblies out of bin/, so the glob below cannot
          ship a second copy of MSBuild into the process that is already running it. -->
-    <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="all" ExcludeAssets="Runtime" />
-    <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="all" ExcludeAssets="Runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="all" ExcludeAssets="Runtime">
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="all" ExcludeAssets="Runtime">
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <!-- Only for the path to the linker, which is copied into this package. Nothing from it is
          referenced or imported, and Squash's consumers never restore it. -->
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" PrivateAssets="all" ExcludeAssets="all" GeneratePathProperty="true" />
