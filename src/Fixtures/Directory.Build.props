@@ -17,6 +17,9 @@
     <Optimize>true</Optimize>
     <DebugSymbols>true</DebugSymbols>
     <Deterministic>true</Deterministic>
+    <!-- The SDK adds Source Link once the checkout has a remote, so the symbol snapshots would
+         depend on where the repository was cloned from. PackagingTests covers Source Link. -->
+    <EnableSourceLink>false</EnableSourceLink>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     <!-- No project here may set IsTrimmable, IsAotCompatible or EnableTrimAnalyzer: the SDK would add

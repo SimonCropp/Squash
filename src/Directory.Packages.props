@@ -6,8 +6,8 @@
   <ItemGroup>
     <PackageVersion Include="DiffEngine" Version="20.7.0" />
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.5.0" />
-    <PackageVersion Include="Microsoft.Build.Framework" Version="18.10.1" Pinned="true" />
-    <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="18.10.1" Pinned="true" />
+    <PackageVersion Include="Microsoft.Build.Framework" Version="18.9.6" Pinned="true" />
+    <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="18.9.6" Pinned="true" />
     <PackageVersion Include="Microsoft.ILVerification" Version="10.0.12" />
     <!-- The bundled linker. Its major must equal ILLinkMajor in Directory.Build.props. -->
     <PackageVersion Include="Microsoft.NET.ILLink.Tasks" Version="10.0.12" />
