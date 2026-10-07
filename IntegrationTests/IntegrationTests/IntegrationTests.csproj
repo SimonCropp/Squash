@@ -19,6 +19,7 @@
     <Compile Include="..\..\src\Squash.Tests\AssemblyDump.cs" Link="Shared\AssemblyDump.cs" />
     <Compile Include="..\..\src\Squash\StrongName.cs" Link="Shared\StrongName.cs" />
     <Compile Include="..\..\src\Squash\PeFile.cs" Link="Shared\PeFile.cs" />
+    <Compile Include="..\..\src\Squash\PeSection.cs" Link="Shared\PeSection.cs" />
     <Compile Include="..\..\src\Squash\Diagnostics.cs" Link="Shared\Diagnostics.cs" />
   </ItemGroup>
 </Project>
