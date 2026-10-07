@@ -13,6 +13,8 @@
 -b true
 --preserve-symbol-paths
 --warnaserror
+--warnaserror- IL2057
+--nowarn IL2026;IL2070
 -x "/src/roots.xml"
 -x "/src/more roots.xml"
 --custom-data "Squash.RootAssembly=App"

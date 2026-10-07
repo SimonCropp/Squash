@@ -74,10 +74,15 @@
       <_Squash_Preserve Condition="'$(_Squash_Preserve)' == ''">None</_Squash_Preserve>
 
       <!-- MSBuild applies NoWarn and WarningsAsErrors to what a task logs, but not
-           TreatWarningsAsErrors, so the linker is told instead. -->
+           TreatWarningsAsErrors, so the linker is told instead. A warning the linker has promoted
+           is then an error that NoWarn and WarningsNotAsErrors cannot reach, so the linker is
+           given both as well; the task passes on only the linker's own codes. With commas, to
+           stay one line of inputs.txt. -->
       <_Squash_TreatWarningsAsErrors>$(SquashTreatWarningsAsErrors)</_Squash_TreatWarningsAsErrors>
       <_Squash_TreatWarningsAsErrors Condition="'$(_Squash_TreatWarningsAsErrors)' == ''">$(TreatWarningsAsErrors)</_Squash_TreatWarningsAsErrors>
       <_Squash_TreatWarningsAsErrors Condition="'$(_Squash_TreatWarningsAsErrors)' != 'true'">false</_Squash_TreatWarningsAsErrors>
+      <_Squash_NoWarn>$(NoWarn.Replace(';', ','))</_Squash_NoWarn>
+      <_Squash_WarningsNotAsErrors>$(WarningsNotAsErrors.Replace(';', ','))</_Squash_WarningsNotAsErrors>
 
       <!-- An executable's entry point is usually private, and rooting the public surface alone
            would trim it away. -->
@@ -109,6 +114,8 @@
                              InternalsVisibleTo=$(_Squash_InternalsVisibleTo);
                              Preserve=$(_Squash_Preserve);
                              TreatWarningsAsErrors=$(_Squash_TreatWarningsAsErrors);
+                             NoWarn=$(_Squash_NoWarn);
+                             WarningsNotAsErrors=$(_Squash_WarningsNotAsErrors);
                              RootEntryPoint=$(_Squash_RootEntryPoint);
                              ExtraArgs=$(SquashExtraArgs);
                              RootDescriptors=$(_Squash_RootDescriptors);
@@ -166,6 +173,8 @@
                 InternalsVisibleTo="$(_Squash_InternalsVisibleTo)"
                 Preserve="$(_Squash_Preserve)"
                 TreatWarningsAsErrors="$(_Squash_TreatWarningsAsErrors)"
+                NoWarn="$(_Squash_NoWarn)"
+                WarningsNotAsErrors="$(_Squash_WarningsNotAsErrors)"
                 RootEntryPoint="$(_Squash_RootEntryPoint)"
                 ExtraArgs="$(SquashExtraArgs)"
                 KeyFile="$(_Squash_KeyFile)"

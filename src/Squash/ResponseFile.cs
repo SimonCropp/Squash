@@ -63,10 +63,24 @@ public static class ResponseFile
         if (request.WarningsAsErrors)
         {
             lines.Add("--warnaserror");
+
+            // WarningsNotAsErrors, which MSBuild cannot apply either once the linker has promoted
+            // the warning. After the switch above, which would otherwise promote these again.
+            if (request.WarningsNotAsErrors.Count > 0)
+            {
+                lines.Add($"--warnaserror- {string.Join(";", request.WarningsNotAsErrors)}");
+            }
         }
         else
         {
             lines.Add("--warnaserror-");
+        }
+
+        // MSBuild applies NoWarn to the warnings a task logs, but one the linker has promoted
+        // arrives as an error, which NoWarn does not touch.
+        if (request.NoWarn.Count > 0)
+        {
+            lines.Add($"--nowarn {string.Join(";", request.NoWarn)}");
         }
 
         lines.AddRange(request.RootDescriptors.Select(_ => $"-x {Quote(_)}"));
@@ -113,6 +127,25 @@ public static class ResponseFile
         };
         return request.References.Where(_ => seen.Add(Path.GetFileName(_)));
     }
+
+    /// <summary>
+    /// The linker's own codes out of a NoWarn or WarningsNotAsErrors list. The rest belong to the compiler, analyzers and
+    /// NuGet, and a bare number there means a compiler warning, which the linker would read as one
+    /// of its own.
+    /// </summary>
+    public static List<string> LinkerCodes(string codes) =>
+        codes
+            .Split([';', ',', ' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Where(IsLinkerCode)
+            .Select(_ => _.ToUpperInvariant())
+            .Distinct()
+            .OrderBy(_ => _, StringComparer.Ordinal)
+            .ToList();
+
+    static bool IsLinkerCode(string code) =>
+        code.Length > 2 &&
+        code.StartsWith("IL", StringComparison.OrdinalIgnoreCase) &&
+        code.Skip(2).All(_ => _ is >= '0' and <= '9');
 
     static string Step(SquashRequest request, string step) =>
         $"--custom-step {Quote($"{step},{request.StepsAssembly}")}";

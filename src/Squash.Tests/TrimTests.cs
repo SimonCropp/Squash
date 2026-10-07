@@ -55,7 +55,7 @@ public class TrimTests
         await Assert.That(attributes).Contains("InternalsVisibleTo(Scenarios.Friend)");
         await Assert.That(attributes).Contains("InternalsVisibleTo(Scenarios.OtherFriend)");
 
-        await Assert.That(File.ReadAllText(trimmed.FriendsFile)).IsEqualTo("Scenarios.Friend\nScenarios.OtherFriend\n");
+        await Assert.That(await File.ReadAllTextAsync(trimmed.FriendsFile)).IsEqualTo("Scenarios.Friend\nScenarios.OtherFriend\n");
         var message = trimmed.Engine.Messages.Single(_ => _.Code == Diagnostics.FriendsIgnored);
         await Assert.That(message.Message!).Contains("Scenarios.Friend, Scenarios.OtherFriend");
     }
@@ -120,12 +120,47 @@ public class TrimTests
     }
 
     [Test]
+    public async Task NoWarnReachesAWarningTheLinkerWouldPromote()
+    {
+        using var trimmed = Trimmed.Run(
+            "Scenarios",
+            "netstandard2.0",
+            _ =>
+            {
+                _.TreatWarningsAsErrors = "true";
+                _.NoWarn = "CS1591,IL2057";
+            });
+
+        await Assert.That(trimmed.Succeeded).IsTrue();
+        await Assert.That(trimmed.Engine.Errors).IsEmpty();
+        await Assert.That(trimmed.Engine.Warnings).IsEmpty();
+        await Assert.That(trimmed.ResponseFile).Contains("--nowarn IL2057");
+    }
+
+    [Test]
+    public async Task WarningsNotAsErrorsStayWarnings()
+    {
+        using var trimmed = Trimmed.Run(
+            "Scenarios",
+            "netstandard2.0",
+            _ =>
+            {
+                _.TreatWarningsAsErrors = "true";
+                _.WarningsNotAsErrors = "CS0618,IL2057";
+            });
+
+        await Assert.That(trimmed.Succeeded).IsTrue();
+        await Assert.That(trimmed.Engine.Errors).IsEmpty();
+        await Assert.That(trimmed.Engine.Warnings.Single().Code).IsEqualTo("IL2057");
+    }
+
+    [Test]
     [Arguments("netstandard2.0")]
     [Arguments("net48")]
     public async Task ASignedAssemblyIsSignedAgain(string framework)
     {
         var trimmed = Trims.Signed(framework);
-        var image = File.ReadAllBytes(trimmed.Assembly);
+        var image = await File.ReadAllBytesAsync(trimmed.Assembly);
         var publicKey = AssemblyName.GetAssemblyName(trimmed.Assembly).GetPublicKey()!;
 
         await Assert.That(trimmed.Succeeded).IsTrue();
@@ -186,7 +221,7 @@ public class TrimTests
         using var trimmed = Trimmed.Run("PublicSigned", "netstandard2.0");
 
         await Assert.That(trimmed.Succeeded).IsTrue();
-        await Assert.That(StrongName.IsSigned(File.ReadAllBytes(trimmed.Assembly))).IsFalse();
+        await Assert.That(StrongName.IsSigned(await File.ReadAllBytesAsync(trimmed.Assembly))).IsFalse();
         await Assert.That(AssemblyName.GetAssemblyName(trimmed.Assembly).GetPublicKey()!.Length).IsGreaterThan(0);
     }
 
@@ -336,9 +371,10 @@ public class TrimTests
     public async Task TheOriginalIsKeptBesideTheResult()
     {
         var trimmed = Trims.Scenarios("netstandard2.0");
-        var kept = File.ReadAllBytes(Path.Combine(trimmed.Directory, "in", "Scenarios.dll"));
+        var kept = await File.ReadAllBytesAsync(Path.Combine(trimmed.Directory, "in", "Scenarios.dll"));
+        var original = await File.ReadAllBytesAsync(trimmed.Original);
 
-        await Assert.That(kept.SequenceEqual(File.ReadAllBytes(trimmed.Original))).IsTrue();
+        await Assert.That(kept.SequenceEqual(original)).IsTrue();
         await Assert.That(new FileInfo(trimmed.Assembly).Length).IsLessThan(kept.Length);
     }
 }
