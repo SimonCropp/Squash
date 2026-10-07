@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <Import Project="..\src\Directory.Build.props" />
+  <PropertyGroup>
+    <!-- Fixture consumers are built by the tests, not packed. -->
+    <IsPackageProject>false</IsPackageProject>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

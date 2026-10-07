@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net48;net10.0</TargetFrameworks>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Dependency\Dependency.csproj" />
+    <EmbeddedResource Include="resource.txt" />
+    <None Include="roots.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

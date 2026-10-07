@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <NoWarn>CS1591;NU1608;NU1109;PolyfillTargetsForNuget</NoWarn>
+    <Version>0.1.0</Version>
+    <LangVersion>preview</LangVersion>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <PackageTags>trimming;linker;illink;msbuild;il;dead-code</PackageTags>
+    <Description>Removes unreachable IL from a library at build time, using the .NET IL linker (illink). The public surface is untouched; non-public types and members nothing reaches are trimmed.</Description>
+    <ResolveAssemblyReferencesSilent>true</ResolveAssemblyReferencesSilent>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <SignAssembly>false</SignAssembly>
+    <Verify_SponsorshipExemption>OpenSource</Verify_SponsorshipExemption>
+    <Verify_SponsorshipExemptionUntil>2027-08</Verify_SponsorshipExemptionUntil>
+    <!-- The major version of the bundled linker (Microsoft.NET.ILLink.Tasks in
+         Directory.Packages.props). It decides the framework Squash.Steps targets and the framework
+         illink.runtimeconfig.json asks for, so the three move together; a test checks they agree. -->
+    <ILLinkMajor Condition="'$(ILLinkMajor)' == ''">10</ILLinkMajor>
+  </PropertyGroup>
+  <!-- Set here rather than in the csproj: ProjectDefaults.props decides whether to pack before the
+       csproj body is evaluated. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Squash.Steps'">
+    <IsPackageProject>false</IsPackageProject>
+  </PropertyGroup>
+</Project>

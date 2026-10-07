@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Squash" Version="$(SquashVersion)" PrivateAssets="all" />
+  </ItemGroup>
+  <!-- Each switched on by the test that needs it. -->
+  <ItemGroup>
+    <Compile Remove="Reflective.cs" Condition="'$(Reflective)' != 'true'" />
+    <SquashRootDescriptor Include="roots.xml" Condition="'$(Roots)' == 'true'" />
+    <SquashRootDescriptor Include="missing.xml" Condition="'$(BreakDescriptor)' == 'true'" />
+  </ItemGroup>
+</Project>

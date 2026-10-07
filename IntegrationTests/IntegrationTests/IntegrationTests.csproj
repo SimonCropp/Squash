@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Verify" />
+    <PackageReference Include="Verify.TUnit" />
+    <PackageReference Include="DiffEngine" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The same reading of an assembly as the unit tests, and the same signature check as the
+         task, compiled in from source: this solution consumes Squash only as the package. -->
+    <Compile Include="..\..\src\Squash.Tests\AssemblyDump.cs" Link="Shared\AssemblyDump.cs" />
+    <Compile Include="..\..\src\Squash\StrongName.cs" Link="Shared\StrongName.cs" />
+    <Compile Include="..\..\src\Squash\PeFile.cs" Link="Shared\PeFile.cs" />
+    <Compile Include="..\..\src\Squash\Diagnostics.cs" Link="Shared\Diagnostics.cs" />
+  </ItemGroup>
+</Project>

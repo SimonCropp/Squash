@@ -1,0 +1,18 @@
+﻿-a "Lib" library
+-reference "/obj/Squash/in/Lib.dll"
+--action skip
+--trim-mode skip
+--action link "Lib"
+--skip-unresolved true
+--ignore-link-attributes true
+--keep-compilers-resources true
+--strip-security false
+--disable-opt ipconstprop
+-b true
+--preserve-symbol-paths
+--warnaserror-
+--custom-data "Squash.RootAssembly=Lib"
+--custom-data "Squash.FriendsFile=friends.txt"
+--custom-data "Squash.ReportFile=removed.txt"
+--custom-step "-SweepStep:ReportRemoved,/linker/Squash.Steps.dll"
+-out "/obj/Squash/out"

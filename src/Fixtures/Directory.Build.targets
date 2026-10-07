@@ -1,0 +1,12 @@
+<Project>
+  <!-- The behaviour tests run SquashTask on these assemblies directly, outside any build, so they
+       need the reference list the compiler saw. -->
+  <Target Name="WriteReferences"
+          AfterTargets="CopyFilesToOutputDirectory"
+          Condition="'$(TargetFramework)' != ''">
+    <WriteLinesToFile File="$(OutDir)references.txt"
+                      Lines="@(ReferencePathWithRefAssemblies->'%(FullPath)')"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+  </Target>
+</Project>

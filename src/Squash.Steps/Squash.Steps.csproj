@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Loaded by the bundled linker into its own process, so it targets the linker's framework. -->
+    <TargetFramework>net$(ILLinkMajor).0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only for the path to the linker. Nothing from the package is referenced or imported. -->
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" PrivateAssets="all" ExcludeAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Compiled against the very linker that will load it, so an upstream API change is a compile
+         error here and never a failure in someone's build. Private=false: the linker already has
+         both in its own directory. -->
+    <Reference Include="illink" HintPath="$(PkgMicrosoft_NET_ILLink_Tasks)/tools/net/illink.dll" Private="false" />
+    <Reference Include="Mono.Cecil" HintPath="$(PkgMicrosoft_NET_ILLink_Tasks)/tools/net/Mono.Cecil.dll" Private="false" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,200 @@
+<Project>
+  <!--
+    Every private property is scoped _Squash_. MSBuild properties are global, so an unscoped name
+    written by two imports means the last import wins for the whole project.
+  -->
+  <PropertyGroup>
+    <!-- One assembly for every host. netstandard2.0 loads under MSBuild on .NET Framework and under
+         MSBuild on .NET of any version. Both paths are overridable only so a repository can build
+         with a task and a linker it just built. -->
+    <_Squash_Assembly Condition="'$(_Squash_Assembly)' == ''">$(MSBuildThisFileDirectory)..\tasks\netstandard2.0\Squash.dll</_Squash_Assembly>
+    <_Squash_LinkerDirectory Condition="'$(_Squash_LinkerDirectory)' == ''">$(MSBuildThisFileDirectory)..\tools\illink\</_Squash_LinkerDirectory>
+
+    <!-- Known at evaluation, because _Squash_UseImplementationAssembly runs when another project asks
+         for this one's output, which can be a build in which nothing else here ran. -->
+    <_Squash_Directory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Squash'))</_Squash_Directory>
+    <_Squash_InputsFile>$(_Squash_Directory)inputs.txt</_Squash_InputsFile>
+    <_Squash_StampFile>$(_Squash_Directory)squash.stamp</_Squash_StampFile>
+    <_Squash_FriendsFile>$(_Squash_Directory)friends.txt</_Squash_FriendsFile>
+  </PropertyGroup>
+
+  <UsingTask TaskName="SquashTask" AssemblyFile="$(_Squash_Assembly)" />
+
+  <!-- Visual Studio decides whether to build at all from items it reads at evaluation. Without this
+       an edited descriptor would not start a build. -->
+  <ItemGroup>
+    <UpToDateCheckInput Include="@(SquashRootDescriptor)" />
+  </ItemGroup>
+
+  <!--
+    Runs before every real compile, whether or not Squash is enabled, and decides two things.
+
+    Whether the compiler must run again. Squash rewrites the compiler's output, so the only way to
+    apply a changed setting is to compile again. inputs.txt records every setting and is a compile
+    input; it is rewritten only when its content changes. It is written when Squash is disabled too,
+    so that disabling it after a trimmed build produces an untrimmed assembly.
+
+    Whether SquashAssembly runs after the compiler. It is appended to TargetsTriggeredByCompilation
+    here, at execution, not at evaluation. NuGet imports package targets in reverse alphabetical
+    order, so an append at evaluation would put Squash ahead of Fody, which appends its own target
+    the same way. Appended here it is always last: trimming must see the woven assembly. A target
+    hooked after AfterCompile, such as PackageShader's, still runs later, which is right: it renames
+    references the linker has to resolve.
+
+    The conditions are those of the SDK's own _GenerateCompileDependencyCache, plus WPF's temporary
+    project, which compiles the same sources a second time.
+  -->
+  <Target Name="_Squash_Prepare"
+          BeforeTargets="CoreCompile"
+          Condition="'$(UsingMicrosoftNETSdk)' == 'true' and
+                     '$(DesignTimeBuild)' != 'true' and
+                     '$(BuildingProject)' == 'true' and
+                     '$(SkipCompilerExecution)' != 'true' and
+                     '$(_TargetAssemblyProjectName)' == '' and
+                     !$(MSBuildProjectName.EndsWith('_wpftmp'))">
+    <PropertyGroup>
+      <!-- An explicit SquashEnabled always wins. Otherwise: optimized builds only, so the inner loop
+           and Hot Reload are left alone; libraries only, since an application is trimmed by
+           PublishTrimmed; C# only, the one language the defaults have been tested against; and not
+           where a framework finds types and members by name at run time. -->
+      <_Squash_Enabled>$(SquashEnabled)</_Squash_Enabled>
+      <_Squash_Enabled Condition="'$(_Squash_Enabled)' == '' and
+                                  '$(Optimize)' == 'true' and
+                                  '$(OutputType)' == 'Library' and
+                                  '$(Language)' == 'C#' and
+                                  '$(UseWPF)' != 'true' and
+                                  '$(UsingMicrosoftNETSdkRazor)' != 'true' and
+                                  '$(IsTestProject)' != 'true'">true</_Squash_Enabled>
+      <_Squash_Enabled Condition="'$(_Squash_Enabled)' != 'true'">false</_Squash_Enabled>
+
+      <_Squash_InternalsVisibleTo>$(SquashInternalsVisibleTo)</_Squash_InternalsVisibleTo>
+      <_Squash_InternalsVisibleTo Condition="'$(_Squash_InternalsVisibleTo)' == ''">Ignore</_Squash_InternalsVisibleTo>
+
+      <_Squash_Preserve>$(SquashPreserve)</_Squash_Preserve>
+      <_Squash_Preserve Condition="'$(_Squash_Preserve)' == ''">None</_Squash_Preserve>
+
+      <!-- MSBuild applies NoWarn and WarningsAsErrors to what a task logs, but not
+           TreatWarningsAsErrors, so the linker is told instead. -->
+      <_Squash_TreatWarningsAsErrors>$(SquashTreatWarningsAsErrors)</_Squash_TreatWarningsAsErrors>
+      <_Squash_TreatWarningsAsErrors Condition="'$(_Squash_TreatWarningsAsErrors)' == ''">$(TreatWarningsAsErrors)</_Squash_TreatWarningsAsErrors>
+      <_Squash_TreatWarningsAsErrors Condition="'$(_Squash_TreatWarningsAsErrors)' != 'true'">false</_Squash_TreatWarningsAsErrors>
+
+      <!-- An executable's entry point is usually private, and rooting the public surface alone
+           would trim it away. -->
+      <_Squash_RootEntryPoint>false</_Squash_RootEntryPoint>
+      <_Squash_RootEntryPoint Condition="'$(OutputType)' != 'Library'">true</_Squash_RootEntryPoint>
+
+      <!-- The linker runs on .NET whatever is hosting MSBuild. dotnet build sets DOTNET_HOST_PATH;
+           Visual Studio and msbuild.exe may not, and NetCoreRoot is what the SDK itself falls back
+           to there. -->
+      <_Squash_DotNetHost>$(DOTNET_HOST_PATH)</_Squash_DotNetHost>
+      <_Squash_DotNetHost Condition="'$(_Squash_DotNetHost)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">$([MSBuild]::EnsureTrailingSlash('$(NetCoreRoot)'))dotnet.exe</_Squash_DotNetHost>
+      <_Squash_DotNetHost Condition="'$(_Squash_DotNetHost)' == ''">$([MSBuild]::EnsureTrailingSlash('$(NetCoreRoot)'))dotnet</_Squash_DotNetHost>
+
+      <!-- The key file as the build resolved it for the compiler. -->
+      <_Squash_KeyFile />
+      <_Squash_KeyFile Condition="'$(KeyOriginatorFile)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(KeyOriginatorFile)'))</_Squash_KeyFile>
+
+      <!-- As a property: an item list cannot be joined to other text where a list is expected. -->
+      <_Squash_RootDescriptors>@(SquashRootDescriptor->'%(FullPath)', '|')</_Squash_RootDescriptors>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(_Squash_Directory)" />
+
+    <WriteLinesToFile File="$(_Squash_InputsFile)"
+                      Lines="Enabled=$(_Squash_Enabled);
+                             Assembly=$(_Squash_Assembly);
+                             LinkerDirectory=$(_Squash_LinkerDirectory);
+                             AssemblyName=$(AssemblyName);
+                             InternalsVisibleTo=$(_Squash_InternalsVisibleTo);
+                             Preserve=$(_Squash_Preserve);
+                             TreatWarningsAsErrors=$(_Squash_TreatWarningsAsErrors);
+                             RootEntryPoint=$(_Squash_RootEntryPoint);
+                             ExtraArgs=$(SquashExtraArgs);
+                             RootDescriptors=$(_Squash_RootDescriptors);
+                             KeyFile=$(_Squash_KeyFile);
+                             KeyContainer=$(KeyContainerName)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <CustomAdditionalCompileInputs Include="$(_Squash_InputsFile)" />
+      <CustomAdditionalCompileInputs Include="@(SquashRootDescriptor->'%(FullPath)')" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(_Squash_Enabled)' == 'true'">
+      <!-- A rebuilt task or linker of the same version leaves inputs.txt as it was. -->
+      <CustomAdditionalCompileInputs Include="$(_Squash_Assembly);$(_Squash_LinkerDirectory)illink.dll;$(_Squash_LinkerDirectory)Squash.Steps.dll" />
+      <!-- Touched only when trimming succeeds. A compile that somehow got past Squash leaves it
+           stale, and the next build compiles again. -->
+      <CustomAdditionalCompileOutputs Include="$(_Squash_StampFile)" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(_Squash_Enabled)' == 'true'">
+      <TargetsTriggeredByCompilation>$(TargetsTriggeredByCompilation);SquashAssembly</TargetsTriggeredByCompilation>
+    </PropertyGroup>
+
+    <!-- The assembly about to be compiled will not be trimmed, so nothing may claim it was, and what
+         an earlier trim left behind no longer describes it. -->
+    <Delete Condition="'$(_Squash_Enabled)' != 'true'"
+            Files="$(_Squash_StampFile);$(_Squash_FriendsFile);$(_Squash_Directory)removed.txt;$(_Squash_Directory)squash.rsp" />
+    <RemoveDir Condition="'$(_Squash_Enabled)' != 'true'"
+               Directories="$(_Squash_Directory)in;$(_Squash_Directory)out" />
+
+    <!-- On every build, not only the ones that trim. IncrementalClean deletes whatever the previous
+         build listed and this one does not, and a build whose compile is up to date never reaches
+         SquashAssembly. -->
+    <ItemGroup>
+      <FileWrites Include="$(_Squash_Directory)**\*" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Called by CoreCompile itself, straight after the compiler and only when it ran. The task moves
+    the intermediate assembly aside, trims it, and moves the result back, so everything after this
+    point (copy to bin, pack, a referencing project) sees only the trimmed assembly.
+  -->
+  <Target Name="SquashAssembly">
+    <SquashTask AssemblyFile="@(IntermediateAssembly->'%(FullPath)')"
+                AssemblyName="$(AssemblyName)"
+                SymbolsFile="@(_DebugSymbolsIntermediatePath->'%(FullPath)')"
+                IntermediateDirectory="$(_Squash_Directory)"
+                References="@(ReferencePathWithRefAssemblies)"
+                RootDescriptors="@(SquashRootDescriptor)"
+                LinkerDirectory="$(_Squash_LinkerDirectory)"
+                DotNetHost="$(_Squash_DotNetHost)"
+                InternalsVisibleTo="$(_Squash_InternalsVisibleTo)"
+                Preserve="$(_Squash_Preserve)"
+                TreatWarningsAsErrors="$(_Squash_TreatWarningsAsErrors)"
+                RootEntryPoint="$(_Squash_RootEntryPoint)"
+                ExtraArgs="$(SquashExtraArgs)"
+                KeyFile="$(_Squash_KeyFile)"
+                KeyContainer="$(KeyContainerName)" />
+
+    <Touch Files="$(_Squash_StampFile)" AlwaysCreate="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_Squash_Directory)**\*" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    friends.txt exists when the last trim took InternalsVisibleTo attributes out of the picture, so
+    internals that only a friend assembly uses are gone. The compiler's reference assembly still
+    lists every one of them: a friend project would compile against it and then fail at run time
+    with a missing member. Clearing the metadata makes projects that reference this one compile
+    against the trimmed assembly itself, which turns that into a compile error. A library with no
+    friends keeps its reference assembly.
+
+    BeforeTargets on GetTargetPath, with the dependency that creates the item, is how
+    dotnet/runtime annotates the same item.
+  -->
+  <Target Name="_Squash_UseImplementationAssembly"
+          BeforeTargets="GetTargetPath"
+          DependsOnTargets="GetTargetPathWithTargetPlatformMoniker"
+          Condition="Exists('$(_Squash_FriendsFile)')">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker ReferenceAssembly="" />
+    </ItemGroup>
+  </Target>
+</Project>

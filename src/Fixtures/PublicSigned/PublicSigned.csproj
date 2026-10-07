@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Public-signed: the signed flag is set and the signature is all zeros, so there is nothing to
+         sign again after trimming. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>PublicSigned</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\Signed\test.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Signed\Signed.cs" />
+  </ItemGroup>
+</Project>

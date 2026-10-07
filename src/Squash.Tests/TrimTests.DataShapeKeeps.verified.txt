@@ -1,0 +1,16 @@
+﻿field System.Int32 Scenarios.Surface::InternalField
+field System.Int32 Scenarios.Surface::privateField
+field System.String Scenarios.ShapeConverter::<UnusedProperty>k__BackingField
+method System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute::get_MemberTypes()
+method System.String Scenarios.ShapeConverter::get_UnusedProperty()
+method System.String Scenarios.UsedInternal::get_UnusedProperty()
+method System.String System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute::get_MemberSignature()
+method System.Type System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute::get_Type()
+method System.Void Scenarios.DynamicTarget::.ctor()
+method System.Void Scenarios.Shape::.ctor()
+method System.Void Scenarios.Shape::set_NeverSet(System.String)
+method System.Void Scenarios.ShapeConverter::.ctor()
+method System.Void Scenarios.ShapeConverter::set_UnusedProperty(System.String)
+method System.Void Scenarios.UsedInternal::.ctor(System.Int32)
+method System.Void Scenarios.UsedInternal::set_UnusedProperty(System.String)
+method System.Void System.Runtime.CompilerServices.NullableAttribute::.ctor(System.Byte[])

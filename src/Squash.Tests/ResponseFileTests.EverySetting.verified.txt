@@ -1,0 +1,26 @@
+﻿-a "App" library
+-a "App" entrypoint
+-reference "/obj/Squash/in/App.exe"
+-reference "/refs/System.Runtime.dll"
+--action skip
+--trim-mode skip
+--action link "App"
+--skip-unresolved true
+--ignore-link-attributes true
+--keep-compilers-resources true
+--strip-security false
+--disable-opt ipconstprop
+-b true
+--preserve-symbol-paths
+--warnaserror
+-x "/src/roots.xml"
+-x "/src/more roots.xml"
+--custom-data "Squash.RootAssembly=App"
+--custom-data "Squash.FriendsFile=friends.txt"
+--custom-data "Squash.ReportFile=removed.txt"
+--custom-step "-RootAssemblyInput:HideInternalsVisibleTo,/linker/Squash.Steps.dll"
+--custom-step "-MarkStep:RestoreInternalsVisibleTo,/linker/Squash.Steps.dll"
+--custom-step "KeepDataShape,/linker/Squash.Steps.dll"
+--custom-step "-SweepStep:ReportRemoved,/linker/Squash.Steps.dll"
+--enable-opt ipconstprop --verbose
+-out "/obj/Squash/out"

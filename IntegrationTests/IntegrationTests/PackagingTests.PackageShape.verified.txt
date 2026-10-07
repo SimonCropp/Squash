@@ -1,0 +1,15 @@
+﻿Squash.nuspec
+build/Squash.targets
+icon.png
+nuget.md
+tasks/netstandard2.0/Squash.dll
+tools/illink/LICENSE.TXT
+tools/illink/Mono.Cecil.Mdb.dll
+tools/illink/Mono.Cecil.Pdb.dll
+tools/illink/Mono.Cecil.Rocks.dll
+tools/illink/Mono.Cecil.dll
+tools/illink/Squash.Steps.dll
+tools/illink/THIRD-PARTY-NOTICES.TXT
+tools/illink/illink.deps.json
+tools/illink/illink.dll
+tools/illink/illink.runtimeconfig.json

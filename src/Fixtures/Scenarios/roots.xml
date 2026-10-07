@@ -1,0 +1,7 @@
+<linker>
+  <assembly fullname="Scenarios">
+    <type fullname="Scenarios.DescriptorRooted">
+      <method name="Rooted" />
+    </type>
+  </assembly>
+</linker>

@@ -1,0 +1,5 @@
+<linker>
+  <assembly fullname="Lib">
+    <type fullname="Lib.UnusedInternal" />
+  </assembly>
+</linker>

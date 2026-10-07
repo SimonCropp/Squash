@@ -1,0 +1,26 @@
+<Project>
+  <!-- Deliberately does not import ..\Directory.Build.props, and the fixtures do not reference
+       ProjectDefaults. They are full of dead code on purpose: that is what the tests trim, and the
+       repository's analysis settings would reject every line of it. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <RunAnalyzers>false</RunAnalyzers>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- Unused and unassigned members are the point. -->
+    <NoWarn>$(NoWarn);CS0169;CS0414;CS0649;CS0067;CS8618;CS1998</NoWarn>
+    <!-- The same IL whatever configuration the solution is built in. The snapshots record method
+         sizes, and must not differ between a Debug and a Release test run. -->
+    <Optimize>true</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <Deterministic>true</Deterministic>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <!-- No project here may set IsTrimmable, IsAotCompatible or EnableTrimAnalyzer: the SDK would add
+         its own reference to Microsoft.NET.ILLink.Tasks, which NuGet rejects (NU1009) alongside the
+         central version. -->
+  </PropertyGroup>
+</Project>

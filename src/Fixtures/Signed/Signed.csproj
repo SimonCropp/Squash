@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Fully strong-named with a throwaway key, its pdb embedded, and its sources embedded in that:
+         the things about an assembly the linker's rewrite could silently break. -->
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>test.snk</AssemblyOriginatorKeyFile>
+    <DebugType>embedded</DebugType>
+    <EmbedAllSources>true</EmbedAllSources>
+  </PropertyGroup>
+</Project>

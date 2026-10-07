@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Nothing public at all: an assembly shared with its siblings through InternalsVisibleTo.
+         With that attribute ignored there is nothing to root, and the linker keeps nothing. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+</Project>

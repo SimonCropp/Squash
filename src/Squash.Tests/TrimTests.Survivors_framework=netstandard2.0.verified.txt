@@ -1,0 +1,141 @@
+﻿flags: ILOnly
+references: Dependency, netstandard
+resources: Scenarios.resource.txt
+debug: CodeView, PdbChecksum, Reproducible
+attributes:
+  AllowPartiallyTrustedCallers
+  AssemblyCompany
+  AssemblyConfiguration
+  AssemblyFileVersion
+  AssemblyInformationalVersion
+  AssemblyProduct
+  AssemblyTitle
+  CompilationRelaxations
+  Debuggable
+  InternalsVisibleTo(Scenarios.Friend)
+  InternalsVisibleTo(Scenarios.OtherFriend)
+  RuntimeCompatibility
+  TargetFramework
+
+internal <Module>
+internal Microsoft.CodeAnalysis.EmbeddedAttribute [Embedded]
+  public method .ctor() : void il:7
+public Scenarios.Constants
+  public method .ctor() : void il:7
+  public method Describe() : string il:19
+public Scenarios.Contracts
+  public method .ctor() : void il:7
+  public method Get() : IContract il:6
+public Scenarios.Converted [TypeConverter]
+  public method .ctor() : void il:7
+public Scenarios.Dynamic
+  public method .ctor() : void il:7
+  public method Run() : void il:1 [DynamicDependency]
+  public method RunAll() : void il:1 [DynamicDependency]
+internal Scenarios.DynamicTarget
+  private method Kept() : void il:1
+internal Scenarios.DynamicWhole
+  private field <Property>k__BackingField : string
+  private field field : string
+  private method .ctor() : void il:29
+  private method Method() : void il:1
+  private method get_Property() : string il:7
+  private method set_Property(string) : void il:8
+public Scenarios.Generated
+  public method .ctor() : void il:7
+  public method Async() : Task`1<int> il:47 [AsyncStateMachine]
+  public method Iterator() : IEnumerable`1<int> il:8 [IteratorStateMachine]
+  public method Lambda(int) : Func`2<int, int> il:26
+private Scenarios.Generated/<>c__DisplayClass0_0
+  internal method <Lambda>b__0(int) : int il:9
+  public field add : int
+  public method .ctor() : void il:7
+private Scenarios.Generated/<Async>d__1
+  private field <>u__1 : YieldAwaiter
+  private method MoveNext() : void il:150
+  private method SetStateMachine(IAsyncStateMachine) : void il:13
+  public field <>1__state : int
+  public field <>t__builder : AsyncTaskMethodBuilder`1<int>
+private Scenarios.Generated/<Iterator>d__2
+  private field <>1__state : int
+  private field <>2__current : int
+  private field <>l__initialThreadId : int
+  private method MoveNext() : bool il:82
+  private method System.Collections.Generic.IEnumerable<System.Int32>.GetEnumerator() : IEnumerator`1<int> il:43
+  private method System.Collections.Generic.IEnumerator<System.Int32>.get_Current() : int il:7
+  private method System.Collections.IEnumerable.GetEnumerator() : IEnumerator il:7
+  private method System.Collections.IEnumerator.Reset() : void il:6
+  private method System.Collections.IEnumerator.get_Current() : object il:12
+  private method System.IDisposable.Dispose() : void il:9
+  public method .ctor(int) : void il:25
+internal Scenarios.Helper
+  public method Used() : string il:6
+internal Scenarios.IInternalInterface
+  public method Method() : void il:0
+internal Scenarios.Implementation
+  public method .ctor() : void il:7
+  public method Run() : void il:1
+public Scenarios.Nesting
+  public method .ctor() : void il:7
+protected Scenarios.Nesting/ProtectedNested
+  public method .ctor() : void il:7
+public Scenarios.Nesting/PublicNested
+  public method .ctor() : void il:7
+public Scenarios.Reflective
+  public method .ctor() : void il:7
+  public method Find(string) : Type il:7
+public Scenarios.Secured
+  public method .ctor() : void il:7
+  public method Critical() : void il:1 [SecuritySafeCritical]
+public Scenarios.Serialized
+  private method Deserialized(StreamingContext) : void il:1 [OnDeserialized]
+  protected method .ctor(SerializationInfo, StreamingContext) : void il:7
+  public method .ctor() : void il:7
+  public method GetObjectData(SerializationInfo, StreamingContext) : void il:1
+public Scenarios.SerializedFactory
+  public method .ctor() : void il:7
+  public method Create() : object il:6
+internal Scenarios.SerializedInternal
+  private method .ctor(SerializationInfo, StreamingContext) : void il:7
+  private method Serializing(StreamingContext) : void il:1 [OnSerializing]
+  public method .ctor() : void il:7
+public Scenarios.Shape
+  private field <Name>k__BackingField : string
+  private field <NeverSet>k__BackingField : string
+  private field unusedField : string
+  private method .ctor(string) : void il:47
+  private method set_Name(string) : void il:8
+  public method Create(string) : Shape il:7
+  public method get_Name() : string il:7
+  public method get_NeverSet() : string il:7
+internal Scenarios.ShapeConverter
+public Scenarios.Surface
+  protected field ProtectedField : int
+  protected internal method ProtectedInternal() : void il:1
+  protected method Protected() : void il:1
+  public field PublicField : int
+  public method .ctor() : void il:7
+  public method Used() : string il:21
+internal Scenarios.UsedInternal
+  private field <UnusedProperty>k__BackingField : string
+  public method .ctor() : void il:18
+  public method get_Value() : string il:6
+internal System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute [AttributeUsage]
+  private field <MemberSignature>k__BackingField : string
+  private field <MemberTypes>k__BackingField : DynamicallyAccessedMemberTypes
+  private field <Type>k__BackingField : Type
+  public method .ctor(DynamicallyAccessedMemberTypes, Type) : void il:21
+  public method .ctor(string, Type) : void il:21
+internal System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes [Flags]
+  public field All : DynamicallyAccessedMemberTypes
+  public field None : DynamicallyAccessedMemberTypes
+  public field value__ : int
+internal System.Runtime.CompilerServices.NullableAttribute [AttributeUsage, Embedded]
+  public field NullableFlags : byte[]
+  public method .ctor(byte) : void il:23
+internal System.Runtime.CompilerServices.NullableContextAttribute [AttributeUsage, Embedded]
+  public field Flag : byte
+  public method .ctor(byte) : void il:14
+internal System.Runtime.CompilerServices.RefSafetyRulesAttribute [AttributeUsage, Embedded]
+  public field Version : int
+  public method .ctor(int) : void il:14

@@ -1,0 +1,129 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+
+# Read only by default. The publish job asks for the OIDC token it needs itself.
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  # merge-dependabot.yml waits for this workflow by its name, Build.
+  test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # One SDK for both solutions: IntegrationTests/global.json pins the same version, and the
+      # fixtures build under it. The bundled linker runs on the runtime this installs.
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Report installed SDKs
+        run: dotnet --list-sdks
+
+      # Keyed on everything that decides the package graph. restore-keys lets a changed graph start
+      # from the previous cache rather than empty.
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', '**/Directory.Packages.props', '**/Directory.Build.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # The tag is the version: tag 1.2.3 (or v1.2.3) builds 1.2.3. Other builds use the
+      # Version in Directory.Build.props.
+      - name: Resolve the version from the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: echo "VERSION_ARGUMENT=-p:Version=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      # This also packs: ProjectDefaults sets GeneratePackageOnBuild for Release package projects,
+      # so the nupkg lands in ./nugets from the build itself. Deliberately not `dotnet pack`, which
+      # on a solution races with GeneratePackageOnBuild.
+      - name: Build src
+        run: dotnet build src --configuration Release ${{ env.VERSION_ARGUMENT }}
+
+      - name: Test
+        run: dotnet run --project src/Squash.Tests --configuration Release --no-build -- --no-ansi --progress off
+
+      # Must follow the src build: the integration suite consumes the nupkg that build emits into
+      # ./nugets, staging it into a private feed and building real consumer projects against it.
+      - name: Build integration tests
+        id: build-integration
+        run: dotnet build IntegrationTests --configuration Release ${{ env.VERSION_ARGUMENT }}
+
+      - name: Test integration
+        if: ${{ !cancelled() && steps.build-integration.outcome == 'success' }}
+        run: dotnet run --project IntegrationTests/IntegrationTests --configuration Release --no-build -- --no-ansi --progress off
+
+      - name: Upload received on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: received-${{ matrix.os }}
+          path: '**/*.received.*'
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # One leg is enough: the package holds no platform-specific file.
+      - name: Upload packages
+        if: success() && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: nupkgs
+          path: nugets/*.nupkg
+          if-no-files-found: error
+          retention-days: 30
+
+  # Trusted publishing: no stored API key. nuget.org validates GitHub's OIDC token against the
+  # policy naming this repository and this workflow file, and returns a key good for an hour.
+  publish:
+    needs: test
+    environment: nuget
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          name: nupkgs
+          path: packages
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: SimonCropp
+
+      - name: Push to nuget.org
+        run: >
+          dotnet nuget push "packages/**/*.nupkg"
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

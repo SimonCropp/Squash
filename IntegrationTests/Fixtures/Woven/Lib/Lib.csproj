@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Fody rewrites the same intermediate assembly after the compiler, as Squash does. Fody has
+         to go first: the weaver looks MethodTimeLogger up by name, and until it has woven the calls
+         in, nothing references that class. -->
+    <PackageReference Include="Fody" Version="6.9.3" PrivateAssets="all" />
+    <PackageReference Include="MethodTimer.Fody" Version="3.2.3" PrivateAssets="all" />
+    <PackageReference Include="Squash" Version="$(SquashVersion)" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

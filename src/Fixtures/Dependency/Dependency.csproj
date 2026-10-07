@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- A dependency that ships real method bodies, as most NuGet packages do, rather than a
+         reference assembly. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+  </PropertyGroup>
+</Project>

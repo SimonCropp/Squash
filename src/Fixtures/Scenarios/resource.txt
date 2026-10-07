@@ -1,0 +1,1 @@
+An embedded resource. Trimming must leave it in place.

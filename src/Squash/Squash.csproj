@@ -1,0 +1,87 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- netstandard2.0 only, and loaded by every host. It works under MSBuild on .NET Framework
+         and under MSBuild on .NET of any version, which a net10.0 asset does not. The linker
+         itself never loads here: the task starts it as a process. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <!-- Identity tracks the release. MSBuild on .NET Framework hands back an already-loaded assembly
+         of the same identity, so a reused node that ran one Squash version would otherwise run that
+         code for a project referencing another. -->
+    <AssemblyVersion>$([System.Text.RegularExpressions.Regex]::Match('$(Version)', '^\d+\.\d+\.\d+').Value)</AssemblyVersion>
+    <!-- NU5128: no lib/ or ref/ for the declared frameworks. NU5100: assemblies outside lib/.
+         Both are the intended shape for a task package. -->
+    <NoWarn>$(NoWarn);NU5128;NU5100</NoWarn>
+    <!-- The linker exactly as the package carries it. The tests run the task against this folder,
+         so what they exercise is what ships. -->
+    <_Squash_LinkerStage>$(MSBuildThisFileDirectory)bin\$(Configuration)\illink\</_Squash_LinkerStage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ExcludeAssets=Runtime keeps the MSBuild assemblies out of bin/, so the glob below cannot
+         ship a second copy of MSBuild into the process that is already running it. -->
+    <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="all" ExcludeAssets="Runtime" />
+    <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="all" ExcludeAssets="Runtime" />
+    <!-- Only for the path to the linker, which is copied into this package. Nothing from it is
+         referenced or imported, and Squash's consumers never restore it. -->
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" PrivateAssets="all" ExcludeAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build order only: the steps must exist before they are staged. They target the linker's
+         framework, which this project cannot reference, so nothing is referenced and the framework
+         check is skipped. -->
+    <ProjectReference Include="..\Squash.Steps\Squash.Steps.csproj"
+                      ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
+                      Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="build\Squash.targets" Pack="true" PackagePath="build\Squash.targets" />
+  </ItemGroup>
+
+  <Target Name="_Squash_StageLinker" AfterTargets="Build">
+    <ItemGroup>
+      <!-- Everything illink.deps.json names. The host refuses to start if one is missing. -->
+      <_Squash_LinkerFile Include="$(PkgMicrosoft_NET_ILLink_Tasks)/tools/net/illink.dll" />
+      <_Squash_LinkerFile Include="$(PkgMicrosoft_NET_ILLink_Tasks)/tools/net/illink.deps.json" />
+      <_Squash_LinkerFile Include="$(PkgMicrosoft_NET_ILLink_Tasks)/tools/net/Mono.Cecil*.dll" />
+      <_Squash_LinkerFile Include="$(PkgMicrosoft_NET_ILLink_Tasks)/THIRD-PARTY-NOTICES.TXT" />
+      <_Squash_LinkerFile Include="illink\LICENSE.TXT" />
+      <_Squash_LinkerFile Include="..\Squash.Steps\bin\$(Configuration)\net$(ILLinkMajor).0\Squash.Steps.dll" />
+    </ItemGroup>
+    <PropertyGroup>
+      <!-- The runtimeconfig the package ships asks for the exact patch it was built with, so it
+           would not start on an older runtime of the same major. Ours asks for the major. A
+           prerelease linker (the canary) needs its own prerelease runtime, which only the shipped
+           file names. -->
+      <_Squash_UpstreamRuntimeConfig>false</_Squash_UpstreamRuntimeConfig>
+      <_Squash_UpstreamRuntimeConfig Condition="$(SquashCanaryILLinkVersion.Contains('-'))">true</_Squash_UpstreamRuntimeConfig>
+      <_Squash_RuntimeConfig>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)illink\illink.runtimeconfig.template.json').Replace('{major}', '$(ILLinkMajor)'))</_Squash_RuntimeConfig>
+    </PropertyGroup>
+    <Copy SourceFiles="@(_Squash_LinkerFile)" DestinationFolder="$(_Squash_LinkerStage)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(_Squash_UpstreamRuntimeConfig)' == 'true'"
+          SourceFiles="$(PkgMicrosoft_NET_ILLink_Tasks)/tools/net/illink.runtimeconfig.json"
+          DestinationFolder="$(_Squash_LinkerStage)" />
+    <WriteLinesToFile Condition="'$(_Squash_UpstreamRuntimeConfig)' != 'true'"
+                      File="$(_Squash_LinkerStage)illink.runtimeconfig.json"
+                      Lines="$(_Squash_RuntimeConfig)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <Target Name="_Squash_PackFiles" BeforeTargets="_GetPackageFiles" DependsOnTargets="_Squash_StageLinker">
+    <ItemGroup>
+      <!-- Forward slash, not backslash, in PackagePath: MSBuild on Linux normalizes a trailing '\'
+           to '/', then NuGet pack appends another, producing 'tasks/netstandard2.0//Squash.dll'. -->
+      <None Include="bin\$(Configuration)\netstandard2.0\*.dll" Pack="true" PackagePath="tasks/netstandard2.0/" Visible="false" />
+      <None Include="$(_Squash_LinkerStage)*" Pack="true" PackagePath="tools/illink/" Visible="false" />
+    </ItemGroup>
+  </Target>
+</Project>

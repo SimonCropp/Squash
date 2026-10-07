@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../.gitattributes" />
+    <File Path="../.gitignore" />
+    <File Path="../readme.md" />
+    <File Path="../claude.md" />
+    <File Path="../docs/DiagnosticCodes.md" />
+    <File Path="../global.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="mdsnippets.json" />
+    <File Path="nuget.config" />
+    <File Path="../.github/workflows/build.yml" />
+    <File Path="../.github/workflows/linker-canary.yml" />
+  </Folder>
+  <Folder Name="/Fixtures/">
+    <File Path="Fixtures/Directory.Build.props" />
+    <File Path="Fixtures/Directory.Build.targets" />
+    <Project Path="Fixtures/Dependency/Dependency.csproj" />
+    <Project Path="Fixtures/EntryPoint/EntryPoint.csproj" />
+    <Project Path="Fixtures/InternalsOnly/InternalsOnly.csproj" />
+    <Project Path="Fixtures/PublicSigned/PublicSigned.csproj" />
+    <Project Path="Fixtures/Scenarios/Scenarios.csproj" />
+    <Project Path="Fixtures/Signed/Signed.csproj" />
+  </Folder>
+  <Project Path="Squash/Squash.csproj" />
+  <Project Path="Squash.Steps/Squash.Steps.csproj" />
+  <Project Path="Squash.Tests/Squash.Tests.csproj" />
+</Solution>

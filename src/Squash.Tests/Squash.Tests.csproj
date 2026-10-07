@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>testing</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Squash\Squash.csproj" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Microsoft.Build.Framework" />
+    <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
+    <!-- Checks that what the linker wrote is still valid IL. -->
+    <PackageReference Include="Microsoft.ILVerification" />
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Verify" />
+    <PackageReference Include="Verify.TUnit" />
+    <PackageReference Include="DiffEngine" />
+    <!-- Regenerates readme.md and docs/*.md on every build of this project, and with
+         ValidateContent fails the build when a snippet has drifted from its source. -->
+    <PackageReference Include="MarkdownSnippets.MsBuild" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Build order only. The behaviour tests run the task on what these produce, in every
+         framework each one targets, so nothing is referenced and no single framework is chosen. -->
+    <FixtureProject Include="..\Fixtures\*\*.csproj" />
+    <ProjectReference Include="@(FixtureProject)"
+                      ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
+                      Private="false" />
+  </ItemGroup>
+</Project>

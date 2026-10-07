@@ -1,0 +1,22 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/src"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  # 18.10+ ships lib/ for net11.0 only, so the net10.0 test project gets no runtime assembly.
+  # Lift once the repo targets net11.0.
+  - dependency-name: "Microsoft.Build.*"
+    versions: [">= 18.10.0"]
+  # The bundled linker. Its patches are what this file is here to deliver. A new major is taken
+  # by hand: it raises the runtime a build machine needs, and moves ILLinkMajor and global.json
+  # with it (see claude.md). Without this entry Dependabot offers only the newest major once one
+  # exists, and patches for the major in use stop arriving. linker-canary.yml is what reports a
+  # new major.
+  - dependency-name: "Microsoft.NET.ILLink.Tasks"
+    update-types: ["version-update:semver-major"]
+  # Released in step with the linker, for the same frameworks.
+  - dependency-name: "Microsoft.ILVerification"
+    update-types: ["version-update:semver-major"]

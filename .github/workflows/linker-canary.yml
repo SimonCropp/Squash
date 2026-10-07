@@ -1,0 +1,115 @@
+name: linker-canary
+
+# Builds and tests against linkers that have not shipped yet. Squash carries a pinned copy of the
+# .NET IL linker, and takes its patches through Dependabot; this is how a change upstream that
+# breaks Squash, or changes what it trims, is seen months before it would arrive as one of those
+# bumps. It is also what reports a new major version, which Dependabot is told to leave alone.
+#
+# Not part of Build: a failure here says something about upstream, not about a pull request.
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # prerelease: the newest version on nuget.org, previews and release candidates included.
+        # daily: the newest build of dotnet/runtime's main branch.
+        channel: [prerelease, daily]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # '~' sorts before everything, so swapping it in for the first '-' puts a prerelease below
+      # its release, which plain version order would not.
+      - name: Find the newest linker
+        id: linker
+        shell: bash
+        run: |
+          if [ "${{ matrix.channel }}" = "daily" ]; then
+            feed=$(sed -n 's/.*key="daily" value="\([^"]*\)".*/\1/p' .github/linker-canary.nuget.config)
+            index="${feed%index.json}flat2/microsoft.net.illink.tasks/index.json"
+          else
+            index="https://api.nuget.org/v3-flatcontainer/microsoft.net.illink.tasks/index.json"
+          fi
+          version=$(curl --silent --show-error --fail "$index" | jq -r '.versions[]' | sed 's/-/~/' | sort -V | tail -n 1 | sed 's/~/-/')
+          pinned=$(sed -n 's/.*Include="Microsoft.NET.ILLink.Tasks" Version="\([^"]*\)".*/\1/p' src/Directory.Packages.props)
+          echo "Newest on ${{ matrix.channel }}: $version. Pinned: $pinned."
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "major=${version%%.*}" >> "$GITHUB_OUTPUT"
+          if [ "$version" = "$pinned" ]; then
+            echo "Nothing newer than the pinned linker."
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The tests target the pinned framework whatever linker they exercise.
+      - name: Set up the pinned .NET
+        if: steps.linker.outputs.current != 'true'
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # Squash.Steps is compiled for the linker's own framework, and the linker runs on it.
+      - name: Set up the linker's .NET
+        if: steps.linker.outputs.current != 'true'
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ steps.linker.outputs.major }}.0.x
+          dotnet-quality: ${{ matrix.channel == 'daily' && 'daily' || 'preview' }}
+
+      # global.json pins the SDK the repository normally builds with. The newest installed one has
+      # to win here, in both solutions: the fixtures copy the integration tests' file.
+      - name: Use the newest installed SDK
+        if: steps.linker.outputs.current != 'true'
+        shell: bash
+        run: |
+          sed -i 's/"latestFeature"/"latestMajor"/' global.json IntegrationTests/global.json
+          dotnet --version
+
+      - name: Add the daily feed
+        if: steps.linker.outputs.current != 'true' && matrix.channel == 'daily'
+        shell: bash
+        run: cp .github/linker-canary.nuget.config src/nuget.config
+
+      - name: Build src
+        if: steps.linker.outputs.current != 'true'
+        run: >
+          dotnet build src --configuration Release
+          -p:SquashCanaryILLinkVersion=${{ steps.linker.outputs.version }}
+          -p:ILLinkMajor=${{ steps.linker.outputs.major }}
+
+      # A snapshot that no longer matches is the linker keeping or removing something different.
+      - name: Test
+        if: steps.linker.outputs.current != 'true'
+        run: dotnet run --project src/Squash.Tests --configuration Release --no-build -- --no-ansi --progress off
+
+      - name: Build integration tests
+        id: build-integration
+        if: ${{ !cancelled() && steps.linker.outputs.current != 'true' }}
+        run: dotnet build IntegrationTests --configuration Release
+
+      - name: Test integration
+        if: ${{ !cancelled() && steps.build-integration.outcome == 'success' }}
+        run: dotnet run --project IntegrationTests/IntegrationTests --configuration Release --no-build -- --no-ansi --progress off
+
+      - name: Upload received on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: received-${{ matrix.channel }}
+          path: '**/*.received.*'
+          if-no-files-found: ignore
+          retention-days: 14
