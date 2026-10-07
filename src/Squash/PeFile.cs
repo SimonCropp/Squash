@@ -41,7 +41,11 @@ public sealed class PeFile
         {
             return Parse(image);
         }
-        catch (Exception exception) when (exception is IndexOutOfRangeException or ArgumentException or OverflowException)
+        catch (Exception exception) when
+            (exception is
+                 IndexOutOfRangeException or
+                 ArgumentException or
+                 OverflowException)
         {
             // An offset in the headers pointed outside the file.
             throw new BadImageFormatException("Not a PE file.", exception);
