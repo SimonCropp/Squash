@@ -69,11 +69,11 @@ The usual cause is an assembly that holds only internal types and shares them th
 
 ```xml
 <PropertyGroup>
-  <SquashInternalsVisibleTo>Honor</SquashInternalsVisibleTo>
+  <Squash_InternalsVisibleTo>Honor</Squash_InternalsVisibleTo>
 </PropertyGroup>
 ```
 
-Otherwise there is nothing for Squash to do there: set `SquashEnabled` to `false`.
+Otherwise there is nothing for Squash to do there: set `Squash_Enabled` to `false`.
 
 
 ## Squash005
@@ -125,11 +125,13 @@ A project that references this one is compiled against the trimmed assembly, so 
 a removed internal fails to compile instead of failing at run time.
 
 To keep a specific member, name it in a [root descriptor](/readme.md#keeping-a-member). To keep
-every internal:
+the internals of the library's own namespaces, name those in
+[`Squash_InternalNamespacesToKeep`](/readme.md#internal-namespaces-to-keep); the message then says which namespaces
+were kept. To keep every internal:
 
 ```xml
 <PropertyGroup>
-  <SquashInternalsVisibleTo>Honor</SquashInternalsVisibleTo>
+  <Squash_InternalsVisibleTo>Honor</Squash_InternalsVisibleTo>
 </PropertyGroup>
 ```
 
@@ -141,3 +143,31 @@ every internal:
 `SquashTask` was given something it cannot work with: an assembly that does not exist, an assembly
 name the linker's command line cannot carry, or a linker directory without the linker. The targets
 in the package never do this; it means the task was called directly with wrong values.
+
+
+## Squash010
+
+**No longer reported.** Version 1.0.1 alone reported it, for a way of keeping what friend assemblies
+use that has since been replaced by [`Squash_InternalNamespacesToKeep`](/readme.md#internal-namespaces-to-keep). The
+code is not used again.
+
+
+## Squash011
+
+**Namespace to keep not found.** Warning.
+
+`Squash_InternalNamespacesToKeep` holds a name that no namespace of the assembly starts with, so that name
+keeps nothing. The message lists the namespaces the assembly does have types in.
+
+A name is compared with the start of each namespace, and the case has to match. A type declared
+outside any namespace is in none: move it into one, or name it in a
+[root descriptor](/readme.md#keeping-a-member).
+
+Where the name is right for some target frameworks and matches nothing in others, the warning can
+be silenced for the project:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);Squash011</NoWarn>
+</PropertyGroup>
+```

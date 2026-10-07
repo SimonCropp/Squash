@@ -33,6 +33,9 @@ public sealed class PeFile
 
     public IReadOnlyList<PeSection> Sections { get; private init; } = [];
 
+    /// <summary>The metadata root, which the stream headers follow.</summary>
+    public int MetadataOffset { get; private init; }
+
     public static PeFile Read(byte[] image)
     {
         try
@@ -122,7 +125,8 @@ public sealed class PeFile
             FlagsOffset = cli + 16,
             SignatureOffset = signatureOffset,
             SignatureSize = signatureSize,
-            Sections = sections
+            Sections = sections,
+            MetadataOffset = Offset(sections, Int32(image, cli + 8))
         };
     }
 
@@ -147,7 +151,7 @@ public sealed class PeFile
         bytes[offset + 2] << 16 |
         bytes[offset + 3] << 24;
 
-    static int UInt16(byte[] bytes, int offset) =>
+    public static int UInt16(byte[] bytes, int offset) =>
         bytes[offset] |
         bytes[offset + 1] << 8;
 }

@@ -77,7 +77,7 @@ public class LibraryTests
         await Assert.That(File.Exists(first.Squash("Lib", "net10.0", "friends.txt"))).IsTrue();
 
         // No file changed. Only the recorded settings tell the build it has work to do.
-        var second = await Consumer.Rebuild(first.Work, project, With("SquashInternalsVisibleTo", "Honor"));
+        var second = await Consumer.Rebuild(first.Work, project, With("Squash_InternalsVisibleTo", "Honor"));
 
         await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
         await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
@@ -104,7 +104,7 @@ public class LibraryTests
         var first = await Consumer.Build("Library", project);
         await Assert.That(first.Cli.ExitCode).IsEqualTo(0).Because(first.Cli.Combined);
 
-        var second = await Consumer.Rebuild(first.Work, project, With("SquashEnabled", "false"));
+        var second = await Consumer.Rebuild(first.Work, project, With("Squash_Enabled", "false"));
 
         await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
         await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
@@ -130,7 +130,7 @@ public class LibraryTests
     [Test]
     public async Task DebugIsTrimmedWhenAsked()
     {
-        var result = await Consumer.Build("Library", project, With("SquashEnabled"), "Debug");
+        var result = await Consumer.Build("Library", project, With("Squash_Enabled"), "Debug");
 
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
         await Assert.That(Consumer.HasType(result.Output("Lib", "net10.0", "Lib.dll", "Debug"), "Lib.UnusedInternal")).IsFalse();

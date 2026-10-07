@@ -23,7 +23,7 @@
   <!-- Visual Studio decides whether to build at all from items it reads at evaluation. Without this
        an edited descriptor would not start a build. -->
   <ItemGroup>
-    <UpToDateCheckInput Include="@(SquashRootDescriptor)" />
+    <UpToDateCheckInput Include="@(Squash_RootDescriptor)" />
   </ItemGroup>
 
   <!--
@@ -53,11 +53,11 @@
                      '$(_TargetAssemblyProjectName)' == '' and
                      !$(MSBuildProjectName.EndsWith('_wpftmp'))">
     <PropertyGroup>
-      <!-- An explicit SquashEnabled always wins. Otherwise: optimized builds only, so the inner loop
+      <!-- An explicit Squash_Enabled always wins. Otherwise: optimized builds only, so the inner loop
            and Hot Reload are left alone; libraries only, since an application is trimmed by
            PublishTrimmed; C# only, the one language the defaults have been tested against; and not
            where a framework finds types and members by name at run time. -->
-      <_Squash_Enabled>$(SquashEnabled)</_Squash_Enabled>
+      <_Squash_Enabled>$(Squash_Enabled)</_Squash_Enabled>
       <_Squash_Enabled Condition="'$(_Squash_Enabled)' == '' and
                                   '$(Optimize)' == 'true' and
                                   '$(OutputType)' == 'Library' and
@@ -67,10 +67,10 @@
                                   '$(IsTestProject)' != 'true'">true</_Squash_Enabled>
       <_Squash_Enabled Condition="'$(_Squash_Enabled)' != 'true'">false</_Squash_Enabled>
 
-      <_Squash_InternalsVisibleTo>$(SquashInternalsVisibleTo)</_Squash_InternalsVisibleTo>
+      <_Squash_InternalsVisibleTo>$(Squash_InternalsVisibleTo)</_Squash_InternalsVisibleTo>
       <_Squash_InternalsVisibleTo Condition="'$(_Squash_InternalsVisibleTo)' == ''">Ignore</_Squash_InternalsVisibleTo>
 
-      <_Squash_Preserve>$(SquashPreserve)</_Squash_Preserve>
+      <_Squash_Preserve>$(Squash_Preserve)</_Squash_Preserve>
       <_Squash_Preserve Condition="'$(_Squash_Preserve)' == ''">None</_Squash_Preserve>
 
       <!-- MSBuild applies NoWarn and WarningsAsErrors to what a task logs, but not
@@ -78,11 +78,15 @@
            is then an error that NoWarn and WarningsNotAsErrors cannot reach, so the linker is
            given both as well; the task passes on only the linker's own codes. With commas, to
            stay one line of inputs.txt. -->
-      <_Squash_TreatWarningsAsErrors>$(SquashTreatWarningsAsErrors)</_Squash_TreatWarningsAsErrors>
+      <_Squash_TreatWarningsAsErrors>$(Squash_TreatWarningsAsErrors)</_Squash_TreatWarningsAsErrors>
       <_Squash_TreatWarningsAsErrors Condition="'$(_Squash_TreatWarningsAsErrors)' == ''">$(TreatWarningsAsErrors)</_Squash_TreatWarningsAsErrors>
       <_Squash_TreatWarningsAsErrors Condition="'$(_Squash_TreatWarningsAsErrors)' != 'true'">false</_Squash_TreatWarningsAsErrors>
       <_Squash_NoWarn>$(NoWarn.Replace(';', ','))</_Squash_NoWarn>
       <_Squash_WarningsNotAsErrors>$(WarningsNotAsErrors.Replace(';', ','))</_Squash_WarningsNotAsErrors>
+
+      <!-- The namespaces, by prefix, whose internals stay for friend assemblies while
+           InternalsVisibleTo is otherwise ignored. With commas, for the same reason. -->
+      <_Squash_InternalNamespacesToKeep>$(Squash_InternalNamespacesToKeep.Replace(';', ','))</_Squash_InternalNamespacesToKeep>
 
       <!-- An executable's entry point is usually private, and rooting the public surface alone
            would trim it away. -->
@@ -101,7 +105,7 @@
       <_Squash_KeyFile Condition="'$(KeyOriginatorFile)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(KeyOriginatorFile)'))</_Squash_KeyFile>
 
       <!-- As a property: an item list cannot be joined to other text where a list is expected. -->
-      <_Squash_RootDescriptors>@(SquashRootDescriptor->'%(FullPath)', '|')</_Squash_RootDescriptors>
+      <_Squash_RootDescriptors>@(Squash_RootDescriptor->'%(FullPath)', '|')</_Squash_RootDescriptors>
     </PropertyGroup>
 
     <MakeDir Directories="$(_Squash_Directory)" />
@@ -116,8 +120,9 @@
                              TreatWarningsAsErrors=$(_Squash_TreatWarningsAsErrors);
                              NoWarn=$(_Squash_NoWarn);
                              WarningsNotAsErrors=$(_Squash_WarningsNotAsErrors);
+                             InternalNamespacesToKeep=$(_Squash_InternalNamespacesToKeep);
                              RootEntryPoint=$(_Squash_RootEntryPoint);
-                             ExtraArgs=$(SquashExtraArgs);
+                             ExtraArgs=$(Squash_ExtraArgs);
                              RootDescriptors=$(_Squash_RootDescriptors);
                              KeyFile=$(_Squash_KeyFile);
                              KeyContainer=$(KeyContainerName)"
@@ -126,7 +131,7 @@
 
     <ItemGroup>
       <CustomAdditionalCompileInputs Include="$(_Squash_InputsFile)" />
-      <CustomAdditionalCompileInputs Include="@(SquashRootDescriptor->'%(FullPath)')" />
+      <CustomAdditionalCompileInputs Include="@(Squash_RootDescriptor->'%(FullPath)')" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(_Squash_Enabled)' == 'true'">
@@ -144,7 +149,7 @@
     <!-- The assembly about to be compiled will not be trimmed, so nothing may claim it was, and what
          an earlier trim left behind no longer describes it. -->
     <Delete Condition="'$(_Squash_Enabled)' != 'true'"
-            Files="$(_Squash_StampFile);$(_Squash_FriendsFile);$(_Squash_Directory)removed.txt;$(_Squash_Directory)squash.rsp" />
+            Files="$(_Squash_StampFile);$(_Squash_FriendsFile);$(_Squash_Directory)removed.txt;$(_Squash_Directory)squash.rsp;$(_Squash_Directory)kept-namespaces.xml" />
     <RemoveDir Condition="'$(_Squash_Enabled)' != 'true'"
                Directories="$(_Squash_Directory)in;$(_Squash_Directory)out" />
 
@@ -167,7 +172,7 @@
                 SymbolsFile="@(_DebugSymbolsIntermediatePath->'%(FullPath)')"
                 IntermediateDirectory="$(_Squash_Directory)"
                 References="@(ReferencePathWithRefAssemblies)"
-                RootDescriptors="@(SquashRootDescriptor)"
+                RootDescriptors="@(Squash_RootDescriptor)"
                 LinkerDirectory="$(_Squash_LinkerDirectory)"
                 DotNetHost="$(_Squash_DotNetHost)"
                 InternalsVisibleTo="$(_Squash_InternalsVisibleTo)"
@@ -175,8 +180,9 @@
                 TreatWarningsAsErrors="$(_Squash_TreatWarningsAsErrors)"
                 NoWarn="$(_Squash_NoWarn)"
                 WarningsNotAsErrors="$(_Squash_WarningsNotAsErrors)"
+                InternalNamespacesToKeep="$(_Squash_InternalNamespacesToKeep)"
                 RootEntryPoint="$(_Squash_RootEntryPoint)"
-                ExtraArgs="$(SquashExtraArgs)"
+                ExtraArgs="$(Squash_ExtraArgs)"
                 KeyFile="$(_Squash_KeyFile)"
                 KeyContainer="$(KeyContainerName)" />
 

@@ -7,12 +7,12 @@
     <Version>1.0.0</Version>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Squash" Version="$(SquashVersion)" PrivateAssets="all" />
+    <PackageReference Include="Squash" Version="$(Squash_Version)" PrivateAssets="all" />
   </ItemGroup>
   <!-- Each switched on by the test that needs it. -->
   <ItemGroup>
     <Compile Remove="Reflective.cs" Condition="'$(Reflective)' != 'true'" />
-    <SquashRootDescriptor Include="roots.xml" Condition="'$(Roots)' == 'true'" />
-    <SquashRootDescriptor Include="missing.xml" Condition="'$(BreakDescriptor)' == 'true'" />
+    <Squash_RootDescriptor Include="roots.xml" Condition="'$(Roots)' == 'true'" />
+    <Squash_RootDescriptor Include="missing.xml" Condition="'$(BreakDescriptor)' == 'true'" />
   </ItemGroup>
 </Project>

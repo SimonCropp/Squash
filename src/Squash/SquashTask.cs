@@ -27,6 +27,7 @@ public class SquashTask :
     public string ExtraArgs { get; set; } = "";
     public string KeyFile { get; set; } = "";
     public string KeyContainer { get; set; } = "";
+    public string InternalNamespacesToKeep { get; set; } = "";
 
     // The last lines the linker wrote, for the case where it fails without a diagnostic of its own.
     readonly Queue<string> output = new();
@@ -71,6 +72,7 @@ public class SquashTask :
         var input = Path.Combine(IntermediateDirectory, "in");
         var outputDirectory = Path.Combine(IntermediateDirectory, "out");
         var friendsFile = Path.Combine(IntermediateDirectory, "friends.txt");
+        var keptNamespacesFile = Path.Combine(IntermediateDirectory, "kept-namespaces.xml");
         var inputAssembly = Path.Combine(input, AssemblyName + extension);
         var inputSymbols = Path.Combine(input, AssemblyName + ".pdb");
         var outputAssembly = Path.Combine(outputDirectory, AssemblyName + extension);
@@ -81,6 +83,7 @@ public class SquashTask :
         Files.RecreateDirectory(input);
         Files.RecreateDirectory(outputDirectory);
         File.Delete(friendsFile);
+        File.Delete(keptNamespacesFile);
 
         // Moved, not copied. If anything below fails the compiler's output is gone from where the
         // build expects it, so the next build compiles again and cannot ship an untrimmed assembly.
@@ -93,6 +96,23 @@ public class SquashTask :
             Files.Move(SymbolsFile, inputSymbols);
         }
 
+        var ignoreFriends = !Is(InternalsVisibleTo, "Honor");
+        var descriptors = RootDescriptors
+            .Select(_ => _.GetMetadata("FullPath"))
+            .ToList();
+
+        // Where friends are honored every internal is kept without this.
+        var keptNamespaces = new List<string>();
+        if (ignoreFriends)
+        {
+            keptNamespaces = WriteKeptNamespaces(inputAssembly, keptNamespacesFile);
+        }
+
+        if (keptNamespaces.Count > 0)
+        {
+            descriptors.Add(keptNamespacesFile);
+        }
+
         var request = new SquashRequest
         {
             AssemblyName = AssemblyName,
@@ -100,16 +120,14 @@ public class SquashTask :
             References = References
                 .Select(_ => _.GetMetadata("FullPath"))
                 .ToList(),
-            RootDescriptors = RootDescriptors
-                .Select(_ => _.GetMetadata("FullPath"))
-                .ToList(),
+            RootDescriptors = descriptors,
             OutputDirectory = outputDirectory,
             StepsAssembly = Path.Combine(LinkerDirectory, "Squash.Steps.dll"),
             // Bare names, resolved by the steps against the working directory: the linker splits
             // custom data on every '=', so a path containing one would be rejected.
             FriendsFile = Path.GetFileName(friendsFile),
             ReportFile = "removed.txt",
-            IgnoreInternalsVisibleTo = !Is(InternalsVisibleTo, "Honor"),
+            IgnoreInternalsVisibleTo = ignoreFriends,
             KeepDataShape = Is(Preserve, "DataShape"),
             WarningsAsErrors = Is(TreatWarningsAsErrors, "true"),
             NoWarn = ResponseFile.LinkerCodes(NoWarn),
@@ -133,7 +151,7 @@ public class SquashTask :
         {
             throw new SquashException(
                 Diagnostics.NothingReachable,
-                $"The linker wrote no '{AssemblyName}{extension}': nothing in it is reachable from its public types, so nothing was kept. If it is used through InternalsVisibleTo, set SquashInternalsVisibleTo to Honor; otherwise set SquashEnabled to false for this project.");
+                $"The linker wrote no '{AssemblyName}{extension}': nothing in it is reachable from its public types, so nothing was kept. If it is used through InternalsVisibleTo, set Squash_InternalsVisibleTo to Honor; otherwise set Squash_Enabled to false for this project.");
         }
 
         if (hasSymbols &&
@@ -162,12 +180,55 @@ public class SquashTask :
         if (File.Exists(friendsFile))
         {
             var friends = string.Join(", ", File.ReadAllLines(friendsFile));
+            var kept = "";
+            if (keptNamespaces.Count > 0)
+            {
+                kept = $", except in {string.Join(", ", keptNamespaces)}, which Squash_InternalNamespacesToKeep keeps whole";
+            }
+
             Report(
                 new(
                     Diagnostics.FriendsIgnored,
                     Severity.Message,
-                    $"Internal types and members of '{AssemblyName}' that only {friends} would use have been removed. Set SquashInternalsVisibleTo to Honor to keep every internal."));
+                    $"Internal types and members of '{AssemblyName}' that only {friends} would use have been removed{kept}. Set Squash_InternalsVisibleTo to Honor to keep every internal."));
         }
+    }
+
+    /// <summary>
+    /// The namespaces whose internals friends may use, as a root descriptor that keeps each of them
+    /// whole. The setting gives prefixes and a descriptor takes exact names, so the names come from
+    /// the assembly the compiler has just produced.
+    /// </summary>
+    List<string> WriteKeptNamespaces(string inputAssembly, string file)
+    {
+        var prefixes = Namespaces.Prefixes(InternalNamespacesToKeep);
+        if (prefixes.Count == 0)
+        {
+            return [];
+        }
+
+        var declared = Namespaces.Read(File.ReadAllBytes(inputAssembly));
+        foreach (var prefix in prefixes)
+        {
+            if (declared.Any(_ => Namespaces.Matches(_, prefix)))
+            {
+                continue;
+            }
+
+            Report(
+                new(
+                    Diagnostics.NamespaceToKeepNotFound,
+                    Severity.Warning,
+                    $"Squash_InternalNamespacesToKeep names '{prefix}', and no namespace of '{AssemblyName}' starts with that, so it keeps nothing. The assembly has types in: {string.Join(", ", declared)}."));
+        }
+
+        var matched = Namespaces.Matching(declared, prefixes);
+        if (matched.Count > 0)
+        {
+            File.WriteAllText(file, Namespaces.Descriptor(AssemblyName, matched), new UTF8Encoding(false));
+        }
+
+        return matched;
     }
 
     void Validate()

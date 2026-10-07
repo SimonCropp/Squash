@@ -110,6 +110,9 @@ public static class Trims
     public static Trimmed DataShape(string framework) =>
         Get($"DataShape {framework}", () => Trimmed.Run("Scenarios", framework, _ => _.Preserve = "DataShape"));
 
+    public static Trimmed InternalNamespaces(string framework) =>
+        Get($"InternalNamespaces {framework}", () => Trimmed.Run("Scenarios", framework, _ => _.InternalNamespacesToKeep = "Scenarios"));
+
     public static Trimmed Descriptor(string framework) =>
         Get(
             $"Descriptor {framework}",
@@ -130,6 +133,7 @@ public static class Trims
             "Stock" => Scenarios(framework),
             "Honor" => Honor(framework),
             "DataShape" => DataShape(framework),
+            "InternalNamespaces" => InternalNamespaces(framework),
             "Descriptor" => Descriptor(framework),
             "Signed" => Signed(framework),
             _ => throw new($"Unknown variant '{variant}'.")
@@ -145,6 +149,7 @@ public static class Trims
             yield return ("Stock", framework);
             yield return ("Honor", framework);
             yield return ("DataShape", framework);
+            yield return ("InternalNamespaces", framework);
         }
 
         yield return ("Signed", "netstandard2.0");

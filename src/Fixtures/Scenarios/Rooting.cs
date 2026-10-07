@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Scenarios;
 
-// Reached only through InternalsVisibleTo. Removed unless SquashInternalsVisibleTo=Honor.
+// Reached only through InternalsVisibleTo. Removed unless Squash_InternalsVisibleTo=Honor.
 class FriendOnly
 {
     public void Method()

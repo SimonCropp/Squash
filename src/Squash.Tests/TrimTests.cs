@@ -37,6 +37,68 @@ public class TrimTests
         Verify(Keeps(Trims.Honor("netstandard2.0"), Trims.Scenarios("netstandard2.0")));
 
     [Test]
+    public Task KeepingInternalNamespacesKeeps() =>
+        Verify(Keeps(Trims.InternalNamespaces("netstandard2.0"), Trims.Scenarios("netstandard2.0")));
+
+    [Test]
+    public async Task KeepingInternalNamespacesKeepsNothingOutsideThem()
+    {
+        var named = Trims.InternalNamespaces("netstandard2.0");
+        var kept = Lines(Trims.Scenarios("netstandard2.0").Removed)
+            .Except(Lines(named.Removed))
+            .ToList();
+
+        // Every line names the type it is about, after the last space or after a member's return type.
+        await Assert.That(kept).IsNotEmpty();
+        foreach (var line in kept)
+        {
+            await Assert.That(line).Contains(" Scenarios.");
+        }
+
+        // Honoring friends keeps what friend namespaces leave to be removed: the internals that came
+        // with the assembly and are not its own.
+        var onlyHonored = Lines(named.Removed)
+            .Except(Lines(Trims.Honor("netstandard2.0").Removed))
+            .ToList();
+        await Assert.That(onlyHonored).IsNotEmpty();
+        foreach (var line in onlyHonored)
+        {
+            await Assert.That(line).DoesNotContain(" Scenarios.");
+        }
+
+        await Assert.That(await File.ReadAllTextAsync(Path.Combine(named.Directory, "kept-namespaces.xml")))
+            .IsEqualTo("<linker>\n  <assembly fullname=\"Scenarios\">\n    <namespace fullname=\"Scenarios\" />\n  </assembly>\n</linker>\n");
+    }
+
+    [Test]
+    public async Task ANamespaceToKeepThatMatchesNothingWarnsAndKeepsNothing()
+    {
+        using var trimmed = Trimmed.Run("Scenarios", "netstandard2.0", _ => _.InternalNamespacesToKeep = "Nowhere");
+
+        await Assert.That(trimmed.Succeeded).IsTrue();
+        await Assert.That(trimmed.Engine.Warnings.Select(_ => _.Code)).Contains(Diagnostics.NamespaceToKeepNotFound);
+        await Assert.That(trimmed.Removed).IsEqualTo(Trims.Scenarios("netstandard2.0").Removed);
+        await Assert.That(File.Exists(Path.Combine(trimmed.Directory, "kept-namespaces.xml"))).IsFalse();
+    }
+
+    [Test]
+    public async Task HonoringFriendsNeedsNoNamespacesToKeep()
+    {
+        using var trimmed = Trimmed.Run(
+            "Scenarios",
+            "netstandard2.0",
+            _ =>
+            {
+                _.InternalsVisibleTo = "Honor";
+                _.InternalNamespacesToKeep = "Scenarios";
+            });
+
+        await Assert.That(trimmed.Succeeded).IsTrue();
+        await Assert.That(trimmed.Removed).IsEqualTo(Trims.Honor("netstandard2.0").Removed);
+        await Assert.That(File.Exists(Path.Combine(trimmed.Directory, "kept-namespaces.xml"))).IsFalse();
+    }
+
+    [Test]
     public Task DataShapeKeeps() =>
         Verify(Keeps(Trims.DataShape("netstandard2.0"), Trims.Scenarios("netstandard2.0")));
 
@@ -260,7 +322,7 @@ public class TrimTests
 
         await Assert.That(trimmed.Succeeded).IsFalse();
         await Assert.That(trimmed.ErrorCodes.Single()).IsEqualTo(Diagnostics.NothingReachable);
-        await Assert.That(trimmed.Engine.Errors.Single().Message!).Contains("SquashInternalsVisibleTo");
+        await Assert.That(trimmed.Engine.Errors.Single().Message!).Contains("Squash_InternalsVisibleTo");
     }
 
     [Test]

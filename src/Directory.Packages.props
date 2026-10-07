@@ -19,7 +19,7 @@
     <PackageVersion Include="Verify.TUnit" Version="33.3.2-beta.1" />
   </ItemGroup>
   <!-- The canary workflow tests a linker that has not shipped yet. -->
-  <ItemGroup Condition="'$(SquashCanaryILLinkVersion)' != ''">
-    <PackageVersion Update="Microsoft.NET.ILLink.Tasks" Version="$(SquashCanaryILLinkVersion)" />
+  <ItemGroup Condition="'$(Squash_CanaryILLinkVersion)' != ''">
+    <PackageVersion Update="Microsoft.NET.ILLink.Tasks" Version="$(Squash_CanaryILLinkVersion)" />
   </ItemGroup>
 </Project>

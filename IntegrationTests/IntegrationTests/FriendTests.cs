@@ -45,11 +45,34 @@ public class FriendTests
             new Dictionary<string, string>
             {
                 ["UseRemoved"] = "true",
-                ["SquashInternalsVisibleTo"] = "Honor"
+                ["Squash_InternalsVisibleTo"] = "Honor"
             });
 
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
         await Assert.That(result.Cli.Combined).DoesNotContain("Squash008");
+    }
+
+    [Test]
+    public async Task KeepingInternalNamespacesKeepsTheLibrarysOwnInternals()
+    {
+        var result = await Consumer.Build(
+            "Library",
+            project,
+            new Dictionary<string, string>
+            {
+                ["UseRemoved"] = "true",
+                ["Squash_InternalNamespacesToKeep"] = "Lib"
+            });
+
+        // The friend uses an internal that nothing in Lib reaches, and compiles.
+        await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
+        await Assert.That(result.Cli.Combined).Contains("except in Lib, which Squash_InternalNamespacesToKeep keeps whole");
+
+        // The namespace is kept whole, and what is outside it is trimmed as before.
+        var library = result.Output("Friend", "net10.0", "Lib.dll");
+        await Assert.That(Consumer.HasType(library, "Lib.UnusedInternal")).IsTrue();
+        await Assert.That(Consumer.HasType(library, "Vendored.Helper")).IsFalse();
+        await Assert.That(Consumer.HasType(result.Squash("Lib", "net10.0", Path.Combine("in", "Lib.dll")), "Vendored.Helper")).IsTrue();
     }
 
     [Test]

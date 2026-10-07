@@ -45,6 +45,10 @@ inside the package.
   between majors.
 - Rooting stays the linker's. The `InternalsVisibleTo` steps only take the attributes away before
   the linker's root step and put them back before marking; they do not mark anything.
+- `Squash_InternalNamespacesToKeep` becomes a root descriptor of exact `<namespace>` entries, written on
+  each trim from the namespaces `Namespaces.Read` finds in the compiled assembly. It is never
+  written for no namespaces: the linker reads an `<assembly>` element with no children as the whole
+  assembly. Nothing is marked by a step for it.
 - `--custom-data` values carry no path. The linker splits them on every `=`, so the steps get bare
   file names and resolve them against the working directory the task sets.
 - `-a` is given the assembly name, never a path, and the assembly is staged as

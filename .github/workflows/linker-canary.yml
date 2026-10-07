@@ -88,7 +88,7 @@ jobs:
         if: steps.linker.outputs.current != 'true'
         run: >
           dotnet build src --configuration Release
-          -p:SquashCanaryILLinkVersion=${{ steps.linker.outputs.version }}
+          -p:Squash_CanaryILLinkVersion=${{ steps.linker.outputs.version }}
           -p:ILLinkMajor=${{ steps.linker.outputs.major }}
 
       # A snapshot that no longer matches is the linker keeping or removing something different.
