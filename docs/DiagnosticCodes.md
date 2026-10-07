@@ -141,3 +141,26 @@ every internal:
 `SquashTask` was given something it cannot work with: an assembly that does not exist, an assembly
 name the linker's command line cannot carry, or a linker directory without the linker. The targets
 in the package never do this; it means the task was called directly with wrong values.
+
+
+## Squash010
+
+**Friend assemblies not found.** Warning.
+
+The build was asked to write the friend roots, with `SquashFriendRoots` set to `Update`, and none of
+the assemblies named in `InternalsVisibleTo` was among the assemblies searched. The file is written
+all the same, and keeps nothing for them.
+
+The friends are read as compiled assemblies, so they have to be built before the project that
+names them writes its friend roots, and against an assembly that still has its internals. Build the
+solution with `SquashInternalsVisibleTo` set to `Honor`, then build the project again with
+`SquashFriendRoots` set to `Update`.
+
+By default the search covers `bin/{configuration}` under the directory above the project. Where the
+friends are built somewhere else, name them:
+
+```xml
+<ItemGroup>
+  <SquashFriendAssembly Include="../artifacts/bin/**/Tests.dll" />
+</ItemGroup>
+```

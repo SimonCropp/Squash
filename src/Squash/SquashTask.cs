@@ -27,6 +27,9 @@ public class SquashTask :
     public string ExtraArgs { get; set; } = "";
     public string KeyFile { get; set; } = "";
     public string KeyContainer { get; set; } = "";
+    public ITaskItem[] FriendAssemblies { get; set; } = [];
+    public string FriendRootsFile { get; set; } = "";
+    public string UpdateFriendRoots { get; set; } = "";
 
     // The last lines the linker wrote, for the case where it fails without a diagnostic of its own.
     readonly Queue<string> output = new();
@@ -75,7 +78,6 @@ public class SquashTask :
         var inputSymbols = Path.Combine(input, AssemblyName + ".pdb");
         var outputAssembly = Path.Combine(outputDirectory, AssemblyName + extension);
         var outputSymbols = Path.Combine(outputDirectory, AssemblyName + ".pdb");
-        responseFile = Path.Combine(IntermediateDirectory, "squash.rsp");
 
         Directory.CreateDirectory(IntermediateDirectory);
         Files.RecreateDirectory(input);
@@ -93,23 +95,46 @@ public class SquashTask :
             Files.Move(SymbolsFile, inputSymbols);
         }
 
+        var ignoreFriends = !Is(InternalsVisibleTo, "Honor");
+        var references = References
+            .Select(_ => _.GetMetadata("FullPath"))
+            .ToList();
+        var steps = Path.Combine(LinkerDirectory, "Squash.Steps.dll");
+
+        // Before the trim, which reads what this writes.
+        if (ignoreFriends &&
+            Is(UpdateFriendRoots, "true") &&
+            !WriteFriendRoots(inputAssembly, references, outputDirectory, steps))
+        {
+            return;
+        }
+
+        var descriptors = RootDescriptors
+            .Select(_ => _.GetMetadata("FullPath"))
+            .ToList();
+
+        // What the friends use, as it was last written. Where friends are honored every internal is
+        // kept without it.
+        var friendRoots = ignoreFriends &&
+                          File.Exists(FriendRootsFile);
+        if (friendRoots)
+        {
+            descriptors.Add(Path.GetFullPath(FriendRootsFile));
+        }
+
         var request = new SquashRequest
         {
             AssemblyName = AssemblyName,
             Input = inputAssembly,
-            References = References
-                .Select(_ => _.GetMetadata("FullPath"))
-                .ToList(),
-            RootDescriptors = RootDescriptors
-                .Select(_ => _.GetMetadata("FullPath"))
-                .ToList(),
+            References = references,
+            RootDescriptors = descriptors,
             OutputDirectory = outputDirectory,
-            StepsAssembly = Path.Combine(LinkerDirectory, "Squash.Steps.dll"),
+            StepsAssembly = steps,
             // Bare names, resolved by the steps against the working directory: the linker splits
             // custom data on every '=', so a path containing one would be rejected.
             FriendsFile = Path.GetFileName(friendsFile),
             ReportFile = "removed.txt",
-            IgnoreInternalsVisibleTo = !Is(InternalsVisibleTo, "Honor"),
+            IgnoreInternalsVisibleTo = ignoreFriends,
             KeepDataShape = Is(Preserve, "DataShape"),
             WarningsAsErrors = Is(TreatWarningsAsErrors, "true"),
             NoWarn = ResponseFile.LinkerCodes(NoWarn),
@@ -119,6 +144,7 @@ public class SquashTask :
         };
 
         // No byte order mark: the linker would read it as part of the first argument.
+        responseFile = Path.Combine(IntermediateDirectory, "squash.rsp");
         File.WriteAllLines(responseFile, ResponseFile.Build(request), new UTF8Encoding(false));
 
         // The linker writes its output before it reports warnings promoted to errors, so the exit
@@ -162,13 +188,111 @@ public class SquashTask :
         if (File.Exists(friendsFile))
         {
             var friends = string.Join(", ", File.ReadAllLines(friendsFile));
-            Report(
-                new(
-                    Diagnostics.FriendsIgnored,
-                    Severity.Message,
-                    $"Internal types and members of '{AssemblyName}' that only {friends} would use have been removed. Set SquashInternalsVisibleTo to Honor to keep every internal."));
+            var body = $"Internal types and members of '{AssemblyName}' that only {friends} would use have been removed. Set SquashInternalsVisibleTo to Honor to keep every internal.";
+            if (friendRoots)
+            {
+                body = $"Internal types and members of '{AssemblyName}' are kept for {friends} only where '{FriendRootsFile}' names them. Build with SquashFriendRoots set to Update to write that file again, or set SquashInternalsVisibleTo to Honor to keep every internal.";
+            }
+
+            Report(new(Diagnostics.FriendsIgnored, Severity.Message, body));
         }
     }
+
+    /// <summary>
+    /// Runs the linker once without linking anything, for the step that reads the friend assemblies,
+    /// and puts the descriptor that step writes where the project keeps it.
+    /// </summary>
+    bool WriteFriendRoots(string inputAssembly, List<string> references, string outputDirectory, string steps)
+    {
+        if (FriendRootsFile.Length == 0)
+        {
+            throw new SquashException(Diagnostics.InvalidInput, "No file was given to write the friend roots to.");
+        }
+
+        var collected = Path.Combine(IntermediateDirectory, "friend-roots.xml");
+        var summary = Path.ChangeExtension(collected, ".txt");
+        var list = Path.Combine(IntermediateDirectory, "friend-assemblies.txt");
+        var noRoots = Path.Combine(IntermediateDirectory, "no-roots.xml");
+        var encoding = new UTF8Encoding(false);
+        File.Delete(collected);
+        File.Delete(summary);
+        File.WriteAllLines(
+            list,
+            FriendAssemblies
+                .Select(_ => _.GetMetadata("FullPath"))
+                .OrderBy(_ => _, StringComparer.Ordinal),
+            encoding);
+        File.WriteAllText(noRoots, "<linker>\n</linker>\n", encoding);
+
+        var request = new SquashRequest
+        {
+            AssemblyName = AssemblyName,
+            Input = inputAssembly,
+            References = references,
+            OutputDirectory = outputDirectory,
+            StepsAssembly = steps,
+            // Bare names: the linker splits custom data on every '='.
+            FriendAssembliesFile = Path.GetFileName(list),
+            FriendRootsFile = Path.GetFileName(collected)
+        };
+
+        responseFile = Path.Combine(IntermediateDirectory, "friend-roots.rsp");
+        File.WriteAllLines(responseFile, ResponseFile.FriendRoots(request, noRoots), encoding);
+
+        if (!base.Execute() ||
+            Log.HasLoggedErrors)
+        {
+            return false;
+        }
+
+        output.Clear();
+        if (!File.Exists(collected))
+        {
+            throw new SquashException(
+                Diagnostics.LinkerFailed,
+                $"The linker wrote no friend roots. Its arguments are in '{responseFile}'.");
+        }
+
+        Files.WriteIfDifferent(FriendRootsFile, File.ReadAllText(collected));
+        ReportFriendRoots(File.ReadAllLines(summary));
+        return true;
+    }
+
+    void ReportFriendRoots(string[] summary)
+    {
+        var read = Tagged(summary, "read");
+        var missing = Tagged(summary, "missing");
+        if (read.Count == 0 &&
+            missing.Count == 0)
+        {
+            Log.LogMessage(MessageImportance.High, $"Squash: '{AssemblyName}' names no friends in InternalsVisibleTo, so '{FriendRootsFile}' is empty.");
+            return;
+        }
+
+        if (read.Count == 0)
+        {
+            Report(
+                new(
+                    Diagnostics.FriendsNotFound,
+                    Severity.Warning,
+                    $"'{AssemblyName}' names {string.Join(", ", missing)} in InternalsVisibleTo, and none of them is among the {FriendAssemblies.Length} assemblies searched, so '{FriendRootsFile}' keeps nothing for them. Build them first, with SquashInternalsVisibleTo set to Honor so that they compile, then build this project again with SquashFriendRoots set to Update."));
+            return;
+        }
+
+        var message = $"Squash: wrote '{FriendRootsFile}' from {read.Count} friend assemblies.";
+        if (missing.Count > 0)
+        {
+            message += $" Not found: {string.Join(", ", missing)}.";
+        }
+
+        Log.LogMessage(MessageImportance.High, message);
+    }
+
+    static List<string> Tagged(string[] lines, string tag) =>
+        lines
+            .Where(_ => _.StartsWith(tag + "\t", StringComparison.Ordinal))
+            .Select(_ => _.Substring(tag.Length + 1))
+            .ToList();
 
     void Validate()
     {

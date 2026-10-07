@@ -1,0 +1,44 @@
+﻿<linker>
+  <!-- Written by Squash: what the assemblies named in InternalsVisibleTo use of this one.
+       Build with SquashFriendRoots set to Update to write it again. -->
+  <assembly fullname="Lib">
+    <type fullname="Lib.Constants">
+      <field signature="System.String Name" />
+      <method signature="System.String Value()" />
+    </type>
+    <type fullname="Lib.Extensions">
+      <method signature="System.String Doubled(System.String)" />
+      <method signature="System.String Fixed()" />
+    </type>
+    <type fullname="Lib.Extensions/&lt;G&gt;$34505F560D9EACF86A87F3ED1F85E448">
+      <method signature="System.String Doubled()" />
+      <method signature="System.String Fixed()" />
+    </type>
+    <type fullname="Lib.Extensions/&lt;G&gt;$34505F560D9EACF86A87F3ED1F85E448/&lt;M&gt;$7DEC1F26B9FD125E814434F43CFB8880" preserve="all" />
+    <type fullname="Lib.Holder`1">
+      <field signature="T Value" />
+      <method signature="System.Void .ctor()" />
+      <method signature="T Get()" />
+      <method signature="TOther Convert(TOther)" />
+    </type>
+    <type fullname="Lib.Holder`1/Inner">
+      <method signature="System.String Name()" />
+      <method signature="System.Void .ctor()" />
+    </type>
+    <type fullname="Lib.MarkerAttribute" preserve="all" />
+    <type fullname="Lib.Mode" preserve="fields" />
+    <type fullname="Lib.Shared">
+      <method signature="System.String Kept()" />
+      <method signature="System.String OnlyForFriends()" />
+    </type>
+    <type fullname="Lib.Template">
+      <method signature="System.String Fill()" />
+      <method signature="System.Void .ctor()" />
+    </type>
+    <type fullname="Lib.Visible">
+      <field signature="System.Int32 count" />
+      <field signature="System.String Hidden" />
+      <method signature="System.String Internal()" />
+    </type>
+  </assembly>
+</linker>

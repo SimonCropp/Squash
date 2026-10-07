@@ -12,6 +12,8 @@ public static class ResponseFile
     public const string RootAssemblyKey = "Squash.RootAssembly";
     public const string FriendsFileKey = "Squash.FriendsFile";
     public const string ReportFileKey = "Squash.ReportFile";
+    public const string FriendAssembliesFileKey = "Squash.FriendAssembliesFile";
+    public const string FriendRootsFileKey = "Squash.FriendRootsFile";
 
     public static List<string> Build(SquashRequest request)
     {
@@ -111,6 +113,33 @@ public static class ResponseFile
             lines.Add(extra);
         }
 
+        lines.Add($"-out {Quote(request.OutputDirectory)}");
+        return lines;
+    }
+
+    /// <summary>
+    /// A run that links nothing. It exists for the step that reads the friend assemblies and writes
+    /// what they use as a root descriptor.
+    /// </summary>
+    public static List<string> FriendRoots(SquashRequest request, string noRoots)
+    {
+        var lines = new List<string>
+        {
+            // The linker insists on an input. An empty descriptor is one, and roots nothing, so
+            // nothing is marked, analysed or written.
+            $"-x {Quote(noRoots)}",
+
+            // The assembly as the compiler produced it, for the step to resolve the friends against.
+            $"-reference {Quote(request.Input)}"
+        };
+        lines.AddRange(References(request).Select(_ => $"-reference {Quote(_)}"));
+        lines.Add("--action skip");
+        lines.Add("--trim-mode skip");
+        lines.Add("--skip-unresolved true");
+        lines.Add($"--custom-data {Quote($"{RootAssemblyKey}={request.AssemblyName}")}");
+        lines.Add($"--custom-data {Quote($"{FriendAssembliesFileKey}={request.FriendAssembliesFile}")}");
+        lines.Add($"--custom-data {Quote($"{FriendRootsFileKey}={request.FriendRootsFile}")}");
+        lines.Add(Step(request, "-MarkStep:CollectFriendRoots"));
         lines.Add($"-out {Quote(request.OutputDirectory)}");
         return lines;
     }

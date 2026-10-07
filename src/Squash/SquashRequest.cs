@@ -13,6 +13,8 @@ public sealed class SquashRequest
     public string StepsAssembly { get; init; } = "";
     public string FriendsFile { get; init; } = "";
     public string ReportFile { get; init; } = "";
+    public string FriendAssembliesFile { get; init; } = "";
+    public string FriendRootsFile { get; init; } = "";
     public bool IgnoreInternalsVisibleTo { get; init; }
     public bool KeepDataShape { get; init; }
     public bool WarningsAsErrors { get; init; }

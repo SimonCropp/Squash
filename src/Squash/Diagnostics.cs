@@ -18,6 +18,7 @@ public static class Diagnostics
     public const string Failed = "Squash007";
     public const string FriendsIgnored = "Squash008";
     public const string InvalidInput = "Squash009";
+    public const string FriendsNotFound = "Squash010";
 
     public static readonly string[] All =
     [
@@ -29,7 +30,8 @@ public static class Diagnostics
         CannotResign,
         Failed,
         FriendsIgnored,
-        InvalidInput
+        InvalidInput,
+        FriendsNotFound
     ];
 
     const string docsBaseUrl = "https://github.com/SimonCropp/Squash/blob/main/docs/DiagnosticCodes.md";
@@ -46,6 +48,7 @@ public static class Diagnostics
             Failed => "Trimming failed",
             FriendsIgnored => "InternalsVisibleTo ignored",
             InvalidInput => "Invalid input",
+            FriendsNotFound => "Friend assemblies not found",
             _ => code
         };
 

@@ -8,6 +8,8 @@ static class CustomData
     public const string RootAssembly = "Squash.RootAssembly";
     public const string FriendsFile = "Squash.FriendsFile";
     public const string ReportFile = "Squash.ReportFile";
+    public const string FriendAssembliesFile = "Squash.FriendAssembliesFile";
+    public const string FriendRootsFile = "Squash.FriendRootsFile";
 
     public static string? Get(LinkContext context, string key)
     {

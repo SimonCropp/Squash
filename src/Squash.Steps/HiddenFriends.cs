@@ -51,9 +51,6 @@ static class HiddenFriends
         hidden.Clear();
     }
 
-    /// <summary>
-    /// "Friend, PublicKey=0024..." gives "Friend".
-    /// </summary>
     public static List<string> Names() =>
         hidden
             .Select(_ => Name(_.Attribute))
@@ -62,7 +59,10 @@ static class HiddenFriends
             .OrderBy(_ => _, StringComparer.Ordinal)
             .ToList();
 
-    static string Name(CustomAttribute attribute)
+    /// <summary>
+    /// "Friend, PublicKey=0024..." gives "Friend".
+    /// </summary>
+    public static string Name(CustomAttribute attribute)
     {
         if (attribute.ConstructorArguments.Count == 0 ||
             attribute.ConstructorArguments[0].Value is not string value)

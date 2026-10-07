@@ -1,0 +1,11 @@
+﻿-x "/obj/Squash/no-roots.xml"
+-reference "/obj/Squash/in/Lib.dll"
+-reference "/refs/netstandard.dll"
+--action skip
+--trim-mode skip
+--skip-unresolved true
+--custom-data "Squash.RootAssembly=Lib"
+--custom-data "Squash.FriendAssembliesFile=friend-assemblies.txt"
+--custom-data "Squash.FriendRootsFile=friend-roots.xml"
+--custom-step "-MarkStep:CollectFriendRoots,/linker/Squash.Steps.dll"
+-out "/obj/Squash/out"

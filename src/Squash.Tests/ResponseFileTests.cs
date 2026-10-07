@@ -47,6 +47,24 @@ public class ResponseFileTests
     }
 
     [Test]
+    public Task FriendRoots()
+    {
+        var request = new SquashRequest
+        {
+            AssemblyName = "Lib",
+            Input = "/obj/Squash/in/Lib.dll",
+            References = ["/refs/netstandard.dll", "/stale/Lib.dll"],
+            OutputDirectory = "/obj/Squash/out",
+            StepsAssembly = "/linker/Squash.Steps.dll",
+            FriendAssembliesFile = "friend-assemblies.txt",
+            FriendRootsFile = "friend-roots.xml"
+        };
+
+        // Nothing is rooted and nothing is linked: the run is there for its one step.
+        return Verify(string.Join("\n", ResponseFile.FriendRoots(request, "/obj/Squash/no-roots.xml")));
+    }
+
+    [Test]
     public Task EverySetting()
     {
         var request = new SquashRequest
@@ -131,5 +149,7 @@ public class ResponseFileTests
         await Assert.That(keys["RootAssembly"]).IsEqualTo(ResponseFile.RootAssemblyKey);
         await Assert.That(keys["FriendsFile"]).IsEqualTo(ResponseFile.FriendsFileKey);
         await Assert.That(keys["ReportFile"]).IsEqualTo(ResponseFile.ReportFileKey);
+        await Assert.That(keys["FriendAssembliesFile"]).IsEqualTo(ResponseFile.FriendAssembliesFileKey);
+        await Assert.That(keys["FriendRootsFile"]).IsEqualTo(ResponseFile.FriendRootsFileKey);
     }
 }

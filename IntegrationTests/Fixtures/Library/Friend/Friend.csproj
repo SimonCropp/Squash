@@ -9,5 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Lib\Lib.csproj" />
     <Compile Remove="UsesRemoved.cs" Condition="'$(UseRemoved)' != 'true'" />
+    <Compile Remove="UsesMore.cs" Condition="'$(UseMore)' != 'true'" />
   </ItemGroup>
 </Project>
