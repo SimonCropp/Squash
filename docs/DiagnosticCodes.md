@@ -69,11 +69,11 @@ The usual cause is an assembly that holds only internal types and shares them th
 
 ```xml
 <PropertyGroup>
-  <SquashInternalsVisibleTo>Honor</SquashInternalsVisibleTo>
+  <Squash_InternalsVisibleTo>Honor</Squash_InternalsVisibleTo>
 </PropertyGroup>
 ```
 
-Otherwise there is nothing for Squash to do there: set `SquashEnabled` to `false`.
+Otherwise there is nothing for Squash to do there: set `Squash_Enabled` to `false`.
 
 
 ## Squash005
@@ -125,11 +125,13 @@ A project that references this one is compiled against the trimmed assembly, so 
 a removed internal fails to compile instead of failing at run time.
 
 To keep a specific member, name it in a [root descriptor](/readme.md#keeping-a-member). To keep
-every internal:
+the internals of the library's own namespaces, name those in
+[`Squash_InternalNamespacesToKeep`](/readme.md#internal-namespaces-to-keep); the message then says which namespaces
+were kept. To keep every internal:
 
 ```xml
 <PropertyGroup>
-  <SquashInternalsVisibleTo>Honor</SquashInternalsVisibleTo>
+  <Squash_InternalsVisibleTo>Honor</Squash_InternalsVisibleTo>
 </PropertyGroup>
 ```
 
@@ -145,22 +147,27 @@ in the package never do this; it means the task was called directly with wrong v
 
 ## Squash010
 
-**Friend assemblies not found.** Warning.
+**No longer reported.** Version 1.0.1 alone reported it, for a way of keeping what friend assemblies
+use that has since been replaced by [`Squash_InternalNamespacesToKeep`](/readme.md#internal-namespaces-to-keep). The
+code is not used again.
 
-The build was asked to write the friend roots, with `SquashFriendRoots` set to `Update`, and none of
-the assemblies named in `InternalsVisibleTo` was among the assemblies searched. The file is written
-all the same, and keeps nothing for them.
 
-The friends are read as compiled assemblies, so they have to be built before the project that
-names them writes its friend roots, and against an assembly that still has its internals. Build the
-solution with `SquashInternalsVisibleTo` set to `Honor`, then build the project again with
-`SquashFriendRoots` set to `Update`.
+## Squash011
 
-By default the search covers `bin/{configuration}` under the directory above the project. Where the
-friends are built somewhere else, name them:
+**Namespace to keep not found.** Warning.
+
+`Squash_InternalNamespacesToKeep` holds a name that no namespace of the assembly starts with, so that name
+keeps nothing. The message lists the namespaces the assembly does have types in.
+
+A name is compared with the start of each namespace, and the case has to match. A type declared
+outside any namespace is in none: move it into one, or name it in a
+[root descriptor](/readme.md#keeping-a-member).
+
+Where the name is right for some target frameworks and matches nothing in others, the warning can
+be silenced for the project:
 
 ```xml
-<ItemGroup>
-  <SquashFriendAssembly Include="../artifacts/bin/**/Tests.dll" />
-</ItemGroup>
+<PropertyGroup>
+  <NoWarn>$(NoWarn);Squash011</NoWarn>
+</PropertyGroup>
 ```

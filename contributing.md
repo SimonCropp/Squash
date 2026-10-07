@@ -48,7 +48,7 @@ A major version is taken by hand, since it raises the .NET runtime a build machi
 To try any linker version without changing a file:
 
 ```
-dotnet build src --configuration Release -p:SquashCanaryILLinkVersion=11.0.0 -p:ILLinkMajor=11
+dotnet build src --configuration Release -p:Squash_CanaryILLinkVersion=11.0.0 -p:ILLinkMajor=11
 ```
 
 `linker-canary.yml` does that every week for the newest prerelease and the newest daily build.

@@ -45,7 +45,7 @@ public class FriendTests
             new Dictionary<string, string>
             {
                 ["UseRemoved"] = "true",
-                ["SquashInternalsVisibleTo"] = "Honor"
+                ["Squash_InternalsVisibleTo"] = "Honor"
             });
 
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
@@ -53,48 +53,26 @@ public class FriendTests
     }
 
     [Test]
-    public async Task FriendRootsKeepWhatAFriendUses()
+    public async Task KeepingInternalNamespacesKeepsTheLibrarysOwnInternals()
     {
-        var uses = new Dictionary<string, string>
-        {
-            ["UseRemoved"] = "true",
-            ["UseMore"] = "true"
-        };
-
-        // The friend is read as a compiled assembly, and it only compiles against a library that
-        // still has its internals.
-        var honored = await Consumer.Build(
+        var result = await Consumer.Build(
             "Library",
             project,
-            new Dictionary<string, string>(uses)
-            {
-                ["SquashInternalsVisibleTo"] = "Honor"
-            });
-        await Assert.That(honored.Cli.ExitCode).IsEqualTo(0).Because(honored.Cli.Combined);
-
-        var written = await Consumer.Rebuild(
-            honored.Work,
-            Path.Combine("Lib", "Lib.csproj"),
             new Dictionary<string, string>
             {
-                ["SquashFriendRoots"] = "Update"
+                ["UseRemoved"] = "true",
+                ["Squash_InternalNamespacesToKeep"] = "Lib"
             });
-        await Assert.That(written.Cli.ExitCode).IsEqualTo(0).Because(written.Cli.Combined);
-        await Assert.That(written.Cli.Combined).Contains("from 1 friend assemblies");
-        await Assert.That(File.Exists(Path.Combine(honored.Work, "Lib", "FriendRoots", "netstandard2.0.xml"))).IsTrue();
 
-        // Friends ignored again, as they are by default: the roots are what lets this compile.
-        var result = await Consumer.Rebuild(honored.Work, project, uses);
+        // The friend uses an internal that nothing in Lib reaches, and compiles.
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
+        await Assert.That(result.Cli.Combined).Contains("except in Lib, which Squash_InternalNamespacesToKeep keeps whole");
 
-        // Kept for the friend is not kept whole.
-        await Assert.That(Consumer.HasType(result.Output("Friend", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
-        var removed = await File.ReadAllTextAsync(result.Squash("Lib", "net10.0", "removed.txt"));
-        await Assert.That(removed).Contains("Lib.Constants::Unused()");
-        await Assert.That(removed).Contains("Lib.Visible::Unused()");
-        await Assert.That(removed).Contains("Lib.Holder`1::Unused()");
-
-        await Verify(await File.ReadAllTextAsync(Path.Combine(honored.Work, "Lib", "FriendRoots", "net10.0.xml")));
+        // The namespace is kept whole, and what is outside it is trimmed as before.
+        var library = result.Output("Friend", "net10.0", "Lib.dll");
+        await Assert.That(Consumer.HasType(library, "Lib.UnusedInternal")).IsTrue();
+        await Assert.That(Consumer.HasType(library, "Vendored.Helper")).IsFalse();
+        await Assert.That(Consumer.HasType(result.Squash("Lib", "net10.0", Path.Combine("in", "Lib.dll")), "Vendored.Helper")).IsTrue();
     }
 
     [Test]

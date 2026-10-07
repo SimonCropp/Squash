@@ -28,23 +28,6 @@ static class Files
         }
     }
 
-    /// <summary>
-    /// Leaves a file that already has this content alone, timestamp included: it may be an input
-    /// the build compares against.
-    /// </summary>
-    public static bool WriteIfDifferent(string path, string content)
-    {
-        if (File.Exists(path) &&
-            File.ReadAllText(path) == content)
-        {
-            return false;
-        }
-
-        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-        File.WriteAllText(path, content, new UTF8Encoding(false));
-        return true;
-    }
-
     public static void RecreateDirectory(string directory)
     {
         if (Directory.Exists(directory))

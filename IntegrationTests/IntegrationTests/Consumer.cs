@@ -99,7 +99,7 @@ public static class Consumer
 
     public static IEnumerable<string> Properties(IReadOnlyDictionary<string, string>? properties)
     {
-        yield return $"-p:SquashVersion={PackageUnderTest.Ensure().Version}";
+        yield return $"-p:Squash_Version={PackageUnderTest.Ensure().Version}";
         if (properties == null)
         {
             yield break;

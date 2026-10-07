@@ -1,6 +1,6 @@
 # Linker arguments
 
-`SquashExtraArgs` is text added to the linker's arguments, after the ones Squash passes. It takes
+`Squash_ExtraArgs` is text added to the linker's arguments, after the ones Squash passes. It takes
 any option the linker has. The linker documents them in
 [Available Command Line Options](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md),
 and lists every one, including those that page leaves out, in the `--help` text in
@@ -8,7 +8,7 @@ and lists every one, including those that page leaves out, in the `--help` text 
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--singlewarn --dump-dependencies</SquashExtraArgs>
+  <Squash_ExtraArgs>--singlewarn --dump-dependencies</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -29,7 +29,7 @@ records, for everything the linker kept, what it was reached from.
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--dump-dependencies</SquashExtraArgs>
+  <Squash_ExtraArgs>--dump-dependencies</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -38,7 +38,7 @@ the same folder:
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--dump-dependencies --dependencies-file why.xml</SquashExtraArgs>
+  <Squash_ExtraArgs>--dump-dependencies --dependencies-file why.xml</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -54,7 +54,7 @@ that the assembly produced some.
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--singlewarn</SquashExtraArgs>
+  <Squash_ExtraArgs>--singlewarn</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -71,7 +71,7 @@ as XML in the linker's
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--generate-warning-suppressions cs</SquashExtraArgs>
+  <Squash_ExtraArgs>--generate-warning-suppressions cs</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -88,7 +88,7 @@ older one did. Squash leaves it at the linker's default of `9999`, which is ever
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--warn 5</SquashExtraArgs>
+  <Squash_ExtraArgs>--warn 5</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -99,7 +99,7 @@ older one did. Squash leaves it at the linker's default of `9999`, which is ever
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--verbose</SquashExtraArgs>
+  <Squash_ExtraArgs>--verbose</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -114,7 +114,7 @@ library. This turns it back on:
 
 ```xml
 <PropertyGroup>
-  <SquashExtraArgs>--enable-opt ipconstprop</SquashExtraArgs>
+  <Squash_ExtraArgs>--enable-opt ipconstprop</Squash_ExtraArgs>
 </PropertyGroup>
 ```
 
@@ -131,8 +131,8 @@ Some options are better given through MSBuild, which Squash turns into the argum
 | Linker option | Use instead |
 |---|---|
 | [`--nowarn`](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md#turning-off-warnings) | `NoWarn` |
-| [`--warnaserror`](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md#treat-warnings-as-errors) | `TreatWarningsAsErrors`, `WarningsNotAsErrors`, `SquashTreatWarningsAsErrors` |
-| [`-x`](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md#trimming-from-an-xml-descriptor) | `SquashRootDescriptor` |
+| [`--warnaserror`](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md#treat-warnings-as-errors) | `TreatWarningsAsErrors`, `WarningsNotAsErrors`, `Squash_TreatWarningsAsErrors` |
+| [`-x`](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md#trimming-from-an-xml-descriptor) | `Squash_RootDescriptor` |
 
 These are described in the [readme](/readme.md#linker-warnings).
 

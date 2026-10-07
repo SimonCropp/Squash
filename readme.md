@@ -38,7 +38,7 @@ By default Squash runs when all of these hold:
  * `OutputType` is `Library`.
  * The project is C#, and is not a WPF, Razor or test project.
 
-`SquashEnabled` set to `true` or `false` overrides all of that. An executable that opts in has its entry point kept.
+`Squash_Enabled` set to `true` or `false` overrides all of that. An executable that opts in has its entry point kept.
 
 The build machine needs a .NET 10 or later runtime, which the .NET 10 SDK includes. The linker runs on it whatever the project targets, and whether the build is `dotnet build` or `msbuild.exe`.
 
@@ -102,15 +102,15 @@ public class Orders
 
 ```xml
 <ItemGroup>
-  <SquashRootDescriptor Include="roots.xml" />
+  <Squash_RootDescriptor Include="roots.xml" />
 </ItemGroup>
 ```
 
-**For every type at once**, with `SquashPreserve`:
+**For every type at once**, with `Squash_Preserve`:
 
 ```xml
 <PropertyGroup>
-  <SquashPreserve>DataShape</SquashPreserve>
+  <Squash_Preserve>DataShape</Squash_Preserve>
 </PropertyGroup>
 ```
 
@@ -130,27 +130,49 @@ To keep what a friend needs, name it in a [descriptor](#keeping-a-member). To re
 
 ```xml
 <PropertyGroup>
-  <SquashInternalsVisibleTo>Honor</SquashInternalsVisibleTo>
+  <Squash_InternalsVisibleTo>Honor</Squash_InternalsVisibleTo>
 </PropertyGroup>
 ```
 
 An assembly with no public types at all, shared entirely through `InternalsVisibleTo`, needs `Honor`: without it nothing is reachable ([Squash004](/docs/DiagnosticCodes.md#squash004)).
 
 
+### Internal namespaces to keep
+
+Between the two is the usual case: friends use the library's own internals, and what is worth removing came from somewhere else, such as the polyfills of a source-only package, which sit in namespaces of their own. `Squash_InternalNamespacesToKeep` names the namespaces that are the library's:
+
+```xml
+<PropertyGroup>
+  <Squash_InternalNamespacesToKeep>MyLibrary</Squash_InternalNamespacesToKeep>
+</PropertyGroup>
+```
+
+ * A name matches every namespace that starts with it, so `MyLibrary` covers `MyLibrary`, `MyLibrary.Internal` and `MyLibraryTests`. Several names are separated by `;`.
+ * Every type in a matching namespace is kept whole: all of its members, private ones included, whether or not anything reaches them.
+ * Everything else is trimmed as before. `InternalsVisibleTo` stays ignored there, and an internal that only a friend uses is removed.
+ * A type in the global namespace has no namespace to match, and is not kept by this.
+ * A name that matches nothing is reported ([Squash011](/docs/DiagnosticCodes.md#squash011)).
+
+A friend that uses an internal from outside those namespaces, a polyfill the library carries for example, still fails to compile. Name that member in a [descriptor](#keeping-a-member), or give the friend a copy of its own.
+
+Each build writes the namespaces that matched to `obj/{configuration}/{framework}/Squash/kept-namespaces.xml`, as the root descriptor the linker is given.
+
+
 ## Settings
 
 | Property or item | Default | |
 |---|---|---|
-| `SquashEnabled` | see [Usage](#usage) | `true` or `false` overrides the defaults. |
-| `SquashInternalsVisibleTo` | `Ignore` | `Honor` keeps every internal when the assembly has friends. |
-| `SquashPreserve` | `None` | `DataShape` keeps the fields, property accessors and constructors of kept types. |
-| `SquashTreatWarningsAsErrors` | `$(TreatWarningsAsErrors)` | Whether a linker warning fails the build. |
-| `SquashRootDescriptor` | none | Item. Descriptor files naming members to keep. |
-| `SquashExtraArgs` | empty | Appended to the linker's arguments, after Squash's own. |
+| `Squash_Enabled` | see [Usage](#usage) | `true` or `false` overrides the defaults. |
+| `Squash_InternalsVisibleTo` | `Ignore` | `Honor` keeps every internal when the assembly has friends. |
+| `Squash_InternalNamespacesToKeep` | empty | Namespaces, by prefix, kept whole for [friends](#internal-namespaces-to-keep). |
+| `Squash_Preserve` | `None` | `DataShape` keeps the fields, property accessors and constructors of kept types. |
+| `Squash_TreatWarningsAsErrors` | `$(TreatWarningsAsErrors)` | Whether a linker warning fails the build. |
+| `Squash_RootDescriptor` | none | Item. Descriptor files naming members to keep. |
+| `Squash_ExtraArgs` | empty | Appended to the linker's arguments, after Squash's own. |
 
 Changing any of them compiles and trims again; nothing needs cleaning.
 
-`SquashExtraArgs` takes any [linker option](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md). Where one contradicts an argument Squash passes, the later one wins. For example `--enable-opt ipconstprop` turns constant folding back on. More examples are in [docs/LinkerArguments.md](/docs/LinkerArguments.md).
+`Squash_ExtraArgs` takes any [linker option](https://github.com/dotnet/runtime/blob/main/docs/tools/illink/illink-options.md). Where one contradicts an argument Squash passes, the later one wins. For example `--enable-opt ipconstprop` turns constant folding back on. More examples are in [docs/LinkerArguments.md](/docs/LinkerArguments.md).
 
 
 ## Linker warnings
@@ -167,7 +189,7 @@ Where the linker cannot follow a piece of reflection it says so, with the `ILxxx
 </PropertyGroup>
 ```
 
-With `TreatWarningsAsErrors` it is the linker that turns its warnings into errors, so Squash passes it the `ILxxxx` codes from `NoWarn` and `WarningsNotAsErrors`, as `--nowarn` and `--warnaserror-`. Only codes of that form are passed. Compiler, analyzer and NuGet codes in the same lists are left out, as is a bare number such as `1591`, which means `CS1591` to the compiler and would mean `IL1591` to the linker. `SquashTreatWarningsAsErrors` set to `false` leaves every linker warning a warning.
+With `TreatWarningsAsErrors` it is the linker that turns its warnings into errors, so Squash passes it the `ILxxxx` codes from `NoWarn` and `WarningsNotAsErrors`, as `--nowarn` and `--warnaserror-`. Only codes of that form are passed. Compiler, analyzer and NuGet codes in the same lists are left out, as is a bare number such as `1591`, which means `CS1591` to the compiler and would mean `IL1591` to the linker. `Squash_TreatWarningsAsErrors` set to `false` leaves every linker warning a warning.
 
 A warning marks the code most likely to break, so each is worth reading once. Annotating the code ([Prepare .NET libraries for trimming](https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming)) fixes it for applications that trim as well.
 

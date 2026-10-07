@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Scenarios;
 
 // Members a serializer or mapper would reach by reflection, which no IL references. Stock rules
-// remove them; SquashPreserve=DataShape keeps them.
+// remove them; Squash_Preserve=DataShape keeps them.
 public class Shape
 {
     Shape()

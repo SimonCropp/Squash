@@ -66,7 +66,7 @@
            prerelease linker (the canary) needs its own prerelease runtime, which only the shipped
            file names. -->
       <_Squash_UpstreamRuntimeConfig>false</_Squash_UpstreamRuntimeConfig>
-      <_Squash_UpstreamRuntimeConfig Condition="$(SquashCanaryILLinkVersion.Contains('-'))">true</_Squash_UpstreamRuntimeConfig>
+      <_Squash_UpstreamRuntimeConfig Condition="$(Squash_CanaryILLinkVersion.Contains('-'))">true</_Squash_UpstreamRuntimeConfig>
       <_Squash_RuntimeConfig>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)illink\illink.runtimeconfig.template.json').Replace('{major}', '$(ILLinkMajor)'))</_Squash_RuntimeConfig>
     </PropertyGroup>
     <Copy SourceFiles="@(_Squash_LinkerFile)" DestinationFolder="$(_Squash_LinkerStage)" SkipUnchangedFiles="true" />

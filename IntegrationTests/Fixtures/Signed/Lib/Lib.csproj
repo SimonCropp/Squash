@@ -9,6 +9,6 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Squash" Version="$(SquashVersion)" PrivateAssets="all" />
+    <PackageReference Include="Squash" Version="$(Squash_Version)" PrivateAssets="all" />
   </ItemGroup>
 </Project>
