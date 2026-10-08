@@ -21,6 +21,7 @@ public static class Diagnostics
 
     // Squash010 was reported by 1.0.1 alone, for friend roots, and is not to be used again.
     public const string NamespaceToKeepNotFound = "Squash011";
+    public const string DocumentationNotTrimmed = "Squash012";
 
     public static readonly string[] All =
     [
@@ -33,7 +34,8 @@ public static class Diagnostics
         Failed,
         FriendsIgnored,
         InvalidInput,
-        NamespaceToKeepNotFound
+        NamespaceToKeepNotFound,
+        DocumentationNotTrimmed
     ];
 
     const string docsBaseUrl = "https://github.com/SimonCropp/Squash/blob/main/docs/DiagnosticCodes.md";
@@ -51,6 +53,7 @@ public static class Diagnostics
             FriendsIgnored => "InternalsVisibleTo ignored",
             InvalidInput => "Invalid input",
             NamespaceToKeepNotFound => "Namespace to keep not found",
+            DocumentationNotTrimmed => "Documentation not trimmed",
             _ => code
         };
 

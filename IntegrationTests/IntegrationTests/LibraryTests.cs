@@ -118,6 +118,61 @@ public class LibraryTests
     }
 
     [Test]
+    public async Task TheDocumentationFileIsTrimmedWithTheAssembly()
+    {
+        var first = await Consumer.Build("Library", project, With("GenerateDocumentationFile"));
+        await Assert.That(first.Cli.ExitCode).IsEqualTo(0).Because(first.Cli.Combined);
+
+        foreach (var framework in frameworks)
+        {
+            var documentation = await File.ReadAllTextAsync(first.Output("Lib", framework, "Lib.xml"));
+            await Assert.That(documentation).Contains("\"T:Lib.Api\"");
+            await Assert.That(documentation).Contains("\"M:Lib.Shared.Kept\"");
+            await Assert.That(documentation).DoesNotContain("Lib.UnusedInternal");
+            await Assert.That(documentation).DoesNotContain("Lib.Shared.OnlyForFriends");
+
+            var removed = await File.ReadAllLinesAsync(first.Squash("Lib", framework, "removed-documentation.txt"));
+            await Assert.That(removed).Contains("T:Lib.UnusedInternal");
+            await Assert.That(removed).Contains("M:Lib.Shared.OnlyForFriends");
+
+            // What the compiler wrote is kept for comparison.
+            await Assert.That(await File.ReadAllTextAsync(first.Squash("Lib", framework, Path.Combine("in", "Lib.xml")))).Contains("\"T:Lib.UnusedInternal\"");
+        }
+
+        // A build with nothing to do does not put the compiler's file back, or write it again.
+        var file = first.Output("Lib", "net10.0", "Lib.xml");
+        var written = File.GetLastWriteTimeUtc(file);
+        for (var build = 2; build <= 3; build++)
+        {
+            var next = await Consumer.Rebuild(first.Work, project, With("GenerateDocumentationFile"));
+            await Assert.That(next.Cli.ExitCode).IsEqualTo(0).Because(next.Cli.Combined);
+            await Assert.That(File.GetLastWriteTimeUtc(file)).IsEqualTo(written).Because($"build {build}");
+            await Assert.That(await File.ReadAllTextAsync(file)).DoesNotContain("Lib.UnusedInternal").Because($"build {build}");
+            await Assert.That(File.Exists(first.Squash("Lib", "net10.0", "removed-documentation.txt"))).IsTrue().Because($"build {build}");
+        }
+    }
+
+    [Test]
+    public async Task DocumentationTrimmingCanBeTurnedOff()
+    {
+        var properties = With("GenerateDocumentationFile");
+        var first = await Consumer.Build("Library", project, properties);
+        await Assert.That(first.Cli.ExitCode).IsEqualTo(0).Because(first.Cli.Combined);
+
+        var file = first.Output("Lib", "net10.0", "Lib.xml");
+        await Assert.That(await File.ReadAllTextAsync(file)).DoesNotContain("Lib.UnusedInternal");
+
+        // No file changed. The setting alone has the compiler write the documentation again.
+        properties["Squash_TrimDocumentation"] = "false";
+        var second = await Consumer.Rebuild(first.Work, project, properties);
+
+        await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
+        await Assert.That(await File.ReadAllTextAsync(file)).Contains("\"T:Lib.UnusedInternal\"");
+        await Assert.That(File.Exists(second.Squash("Lib", "net10.0", "removed-documentation.txt"))).IsFalse();
+        await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
+    }
+
+    [Test]
     public async Task DebugIsNotTrimmed()
     {
         var result = await Consumer.Build("Library", project, configuration: "Debug");

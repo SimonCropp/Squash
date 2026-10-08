@@ -16,8 +16,13 @@ public sealed class Trimmed :
 
     public string Symbols { get; }
 
+    /// <summary>The documentation file, for a fixture that has one. On success, trimmed.</summary>
+    public string Documentation { get; }
+
     /// <summary>An untouched copy of what went in.</summary>
     public string Original { get; }
+
+    public string OriginalDocumentation => Path.ChangeExtension(Original, ".xml");
 
     public IReadOnlyList<string> References { get; }
     public bool Succeeded { get; private set; }
@@ -25,6 +30,7 @@ public sealed class Trimmed :
     public string Directory => Temp.Combine("obj", "Squash");
     public string FriendsFile => Path.Combine(Directory, "friends.txt");
     public string Removed => File.ReadAllText(Path.Combine(Directory, "removed.txt"));
+    public string RemovedDocumentationFile => Path.Combine(Directory, "removed-documentation.txt");
     public string ResponseFile => File.ReadAllText(Path.Combine(Directory, "squash.rsp"));
 
     Trimmed(string fixture, string framework, string extension)
@@ -34,6 +40,7 @@ public sealed class Trimmed :
         var source = TestEnvironment.Fixture(fixture, framework);
         Assembly = Temp.Combine("obj", fixture + extension);
         Symbols = Temp.Combine("obj", fixture + ".pdb");
+        Documentation = Temp.Combine("obj", fixture + ".xml");
         Original = Temp.Combine("original", fixture + extension);
         References = File.ReadAllLines(Path.Combine(source, "references.txt"));
 
@@ -47,6 +54,13 @@ public sealed class Trimmed :
         {
             File.Copy(symbols, Symbols);
             File.Copy(symbols, Temp.Combine("original", fixture + ".pdb"));
+        }
+
+        var documentation = Path.Combine(source, fixture + ".xml");
+        if (File.Exists(documentation))
+        {
+            File.Copy(documentation, Documentation);
+            File.Copy(documentation, OriginalDocumentation);
         }
     }
 
@@ -69,6 +83,14 @@ public sealed class Trimmed :
         {
             task.SymbolsFile = trimmed.Symbols;
         }
+
+        // As the targets pass them: the file where the project has one, and trimming it by default.
+        if (File.Exists(trimmed.Documentation))
+        {
+            task.DocumentationFile = trimmed.Documentation;
+        }
+
+        task.TrimDocumentation = "true";
 
         configure?.Invoke(task);
         trimmed.Succeeded = task.Execute();
@@ -118,6 +140,9 @@ public static class Trims
             $"Descriptor {framework}",
             () => Trimmed.Run("Scenarios", framework, _ => _.RootDescriptors = [new TaskItem(Roots(framework))]));
 
+    public static Trimmed Documented(string framework) =>
+        Get($"Documented {framework}", () => Trimmed.Run("Documented", framework));
+
     public static string KeyFile =>
         Path.Combine(TestEnvironment.RepoRoot, "src", "Fixtures", "Signed", "test.snk");
 
@@ -135,6 +160,7 @@ public static class Trims
             "DataShape" => DataShape(framework),
             "InternalNamespaces" => InternalNamespaces(framework),
             "Descriptor" => Descriptor(framework),
+            "Documented" => Documented(framework),
             "Signed" => Signed(framework),
             _ => throw new($"Unknown variant '{variant}'.")
         };
@@ -150,6 +176,7 @@ public static class Trims
             yield return ("Honor", framework);
             yield return ("DataShape", framework);
             yield return ("InternalNamespaces", framework);
+            yield return ("Documented", framework);
         }
 
         yield return ("Signed", "netstandard2.0");

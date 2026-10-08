@@ -1,0 +1,158 @@
+﻿<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Documented</name>
+    </assembly>
+    <members>
+        <member name="T:Documented.Kept`1">
+            <summary>Kept.</summary>
+            <typeparam name="T">Kept.</typeparam>
+        </member>
+        <member name="F:Documented.Kept`1.Constant">
+            <summary>Kept.</summary>
+        </member>
+        <member name="F:Documented.Kept`1.Field">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.#ctor">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.#ctor(System.Int32,`0)">
+            <summary>Kept.</summary>
+            <param name="a">Kept.</param>
+            <param name="b">Kept.</param>
+        </member>
+        <member name="M:Documented.Kept`1.Plain">
+            <summary>
+            Kept. Over more than one line, with <see cref="F:Documented.Kept`1.Field"/> and <c>code</c>, an entity &amp; and
+            <![CDATA[a section that holds </member> without ending anything]]>.
+            </summary>
+            <remarks>
+            <para>Kept.</para>
+            <code>
+            var kept = new Kept&lt;int&gt;();
+            </code>
+            </remarks>
+        </member>
+        <member name="M:Documented.Kept`1.Signature(System.Int32@,`0@,System.Int32[0:,0:],System.Int32*,System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.List{`0}},)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.GenericMethod``1(``0,Documented.Kept{``0}.Nested{`0})">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.op_Implicit(Documented.Kept{`0})~System.Int32">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.op_Explicit(Documented.Kept{`0})~System.String">
+            <summary>Kept.</summary>
+        </member>
+        <member name="P:Documented.Kept`1.Property">
+            <summary>Kept.</summary>
+        </member>
+        <member name="P:Documented.Kept`1.Item(System.String,`0)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="E:Documented.Kept`1.Event">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.System#IDisposable#Dispose">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.System#Collections#Generic#IEnumerable{T}#GetEnumerator">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.System#Collections#IEnumerable#GetEnumerator">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.Kept`1.Nested`1">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Kept`1.Nested`1.Method(`0,`1)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.KeptEnum">
+            <summary>Kept.</summary>
+        </member>
+        <member name="F:Documented.KeptEnum.First">
+            <summary>Kept.</summary>
+        </member>
+        <member name="F:Documented.KeptEnum.Second">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.KeptExtensions">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.KeptExtensions.Classic(System.String,System.Int32)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.KeptExtensions.Block(System.String,System.Int32)">
+            <inheritdoc cref="M:Documented.KeptExtensions.&lt;G&gt;$34505F560D9EACF86A87F3ED1F85E448.Block(System.Int32)"/>
+        </member>
+        <member name="M:Documented.KeptExtensions.get_BlockProperty(System.String)">
+            <inheritdoc cref="P:Documented.KeptExtensions.&lt;G&gt;$34505F560D9EACF86A87F3ED1F85E448.BlockProperty"/>
+        </member>
+        <member name="T:Documented.KeptExtensions.&lt;G&gt;$34505F560D9EACF86A87F3ED1F85E448.&lt;M&gt;$1ECAAA7909D948C2097267E30A525CB0">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.KeptExtensions.&lt;G&gt;$34505F560D9EACF86A87F3ED1F85E448.Block(System.Int32)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="P:Documented.KeptExtensions.&lt;G&gt;$34505F560D9EACF86A87F3ED1F85E448.BlockProperty">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.Partly">
+            <summary>Kept.</summary>
+        </member>
+        <member name="F:Documented.Partly.Field">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Partly.#ctor">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Partly.Overloaded(System.Int32)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Partly.Overloaded``1(``0)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Partly.Used">
+            <summary>Kept.</summary>
+        </member>
+        <member name="P:Documented.Partly.Property">
+            <summary>Kept.</summary>
+        </member>
+        <member name="P:Documented.Partly.Item(System.Int32)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="E:Documented.Partly.Event">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.Partly.op_Implicit(Documented.Partly)~System.Int32">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.Partly.Nested">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.INotify">
+            <summary>Kept.</summary>
+        </member>
+        <member name="E:Documented.INotify.Changed">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.IHasValue`1">
+            <summary>Kept.</summary>
+        </member>
+        <member name="P:Documented.IHasValue`1.Value">
+            <summary>Kept.</summary>
+        </member>
+        <member name="P:Documented.IHasValue`1.Item(System.Int32)">
+            <summary>Kept.</summary>
+        </member>
+        <member name="T:Documented.IPair`2">
+            <summary>Kept.</summary>
+        </member>
+        <member name="M:Documented.IPair`2.Method(System.Collections.Generic.Dictionary{`0,`1})">
+            <summary>Kept.</summary>
+        </member>
+    </members>
+</doc>

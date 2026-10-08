@@ -12,6 +12,13 @@ public static class ResponseFile
     public const string RootAssemblyKey = "Squash.RootAssembly";
     public const string FriendsFileKey = "Squash.FriendsFile";
     public const string ReportFileKey = "Squash.ReportFile";
+    public const string AssemblyFileKey = "Squash.AssemblyFile";
+    public const string RemovedDocumentationFileKey = "Squash.RemovedDocumentationFile";
+
+    // Under the directory the linker is started in: where the assembly it is given is, and where it
+    // is told to write. RemovedDocumentation in Squash.Steps finds both files by these names.
+    public const string InputDirectory = "in";
+    public const string OutputDirectory = "out";
 
     public static List<string> Build(SquashRequest request)
     {
@@ -103,6 +110,15 @@ public static class ResponseFile
         }
 
         lines.Add(Step(request, "-SweepStep:ReportRemoved"));
+
+        if (request.RemovedDocumentationFile.Length > 0)
+        {
+            // After the output is written, because the step compares what came out with what went
+            // in. Both are found by the file name, under the directories above.
+            lines.Add($"--custom-data {Quote($"{AssemblyFileKey}={Path.GetFileName(request.Input)}")}");
+            lines.Add($"--custom-data {Quote($"{RemovedDocumentationFileKey}={request.RemovedDocumentationFile}")}");
+            lines.Add(Step(request, "+OutputStep:RemovedDocumentation"));
+        }
 
         // Last of the options, so that a later --enable-opt or --disable-opt wins over the ones above.
         var extra = request.ExtraArgs.Trim();

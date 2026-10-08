@@ -88,6 +88,10 @@
            InternalsVisibleTo is otherwise ignored. With commas, for the same reason. -->
       <_Squash_InternalNamespacesToKeep>$(Squash_InternalNamespacesToKeep.Replace(';', ','))</_Squash_InternalNamespacesToKeep>
 
+      <!-- The documentation file is trimmed with the assembly unless this is false. -->
+      <_Squash_TrimDocumentation>$(Squash_TrimDocumentation)</_Squash_TrimDocumentation>
+      <_Squash_TrimDocumentation Condition="'$(_Squash_TrimDocumentation)' != 'false'">true</_Squash_TrimDocumentation>
+
       <!-- An executable's entry point is usually private, and rooting the public surface alone
            would trim it away. -->
       <_Squash_RootEntryPoint>false</_Squash_RootEntryPoint>
@@ -121,6 +125,7 @@
                              NoWarn=$(_Squash_NoWarn);
                              WarningsNotAsErrors=$(_Squash_WarningsNotAsErrors);
                              InternalNamespacesToKeep=$(_Squash_InternalNamespacesToKeep);
+                             TrimDocumentation=$(_Squash_TrimDocumentation);
                              RootEntryPoint=$(_Squash_RootEntryPoint);
                              ExtraArgs=$(Squash_ExtraArgs);
                              RootDescriptors=$(_Squash_RootDescriptors);
@@ -149,7 +154,7 @@
     <!-- The assembly about to be compiled will not be trimmed, so nothing may claim it was, and what
          an earlier trim left behind no longer describes it. -->
     <Delete Condition="'$(_Squash_Enabled)' != 'true'"
-            Files="$(_Squash_StampFile);$(_Squash_FriendsFile);$(_Squash_Directory)removed.txt;$(_Squash_Directory)squash.rsp;$(_Squash_Directory)kept-namespaces.xml" />
+            Files="$(_Squash_StampFile);$(_Squash_FriendsFile);$(_Squash_Directory)removed.txt;$(_Squash_Directory)squash.rsp;$(_Squash_Directory)kept-namespaces.xml;$(_Squash_Directory)removed-documentation.txt" />
     <RemoveDir Condition="'$(_Squash_Enabled)' != 'true'"
                Directories="$(_Squash_Directory)in;$(_Squash_Directory)out" />
 
@@ -181,6 +186,8 @@
                 NoWarn="$(_Squash_NoWarn)"
                 WarningsNotAsErrors="$(_Squash_WarningsNotAsErrors)"
                 InternalNamespacesToKeep="$(_Squash_InternalNamespacesToKeep)"
+                DocumentationFile="@(DocFileItem->'%(FullPath)')"
+                TrimDocumentation="$(_Squash_TrimDocumentation)"
                 RootEntryPoint="$(_Squash_RootEntryPoint)"
                 ExtraArgs="$(Squash_ExtraArgs)"
                 KeyFile="$(_Squash_KeyFile)"

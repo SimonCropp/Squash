@@ -8,6 +8,13 @@ static class CustomData
     public const string RootAssembly = "Squash.RootAssembly";
     public const string FriendsFile = "Squash.FriendsFile";
     public const string ReportFile = "Squash.ReportFile";
+    public const string AssemblyFile = "Squash.AssemblyFile";
+    public const string RemovedDocumentationFile = "Squash.RemovedDocumentationFile";
+
+    // Where, under the directory the task started the linker in, the assembly it is given is and
+    // where the linker is told to write. SquashTask repeats these.
+    public const string InputDirectory = "in";
+    public const string OutputDirectory = "out";
 
     public static string? Get(LinkContext context, string key)
     {

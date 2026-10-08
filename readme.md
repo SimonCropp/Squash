@@ -65,6 +65,15 @@ The linker is asked to remove members, not to rewrite the ones that stay. Squash
 Every build writes `obj/{configuration}/{framework}/Squash/removed.txt`, listing each type, method and field that was removed, and keeps the assembly the compiler produced in the `in` folder beside it.
 
 
+## Documentation
+
+Where the project writes an XML documentation file (`GenerateDocumentationFile`), the entry for each removed type and member is taken out of it, so the file describes the assembly that ships. A source-only package compiled into the library documents its own members into that file, and can leave it larger than the assembly it sits beside.
+
+An entry goes only when its member went into the linker and did not come out. Every other entry stays where it was, byte for byte as the compiler wrote it. A `cref` or `inheritdoc` that points at a removed member is left as it is.
+
+Each build lists the names it took out in `obj/{configuration}/{framework}/Squash/removed-documentation.txt`, and keeps the file the compiler wrote in the `in` folder beside it. `Squash_TrimDocumentation` set to `false` leaves the file alone.
+
+
 ## Reflection
 
 The linker follows code, and reflection it can read: `typeof`, `Type.GetMethod("Name")` with a constant, members named by `[DynamicallyAccessedMembers]`. It cannot follow a serializer, a mapper or a container finding members at run time. A member reached only that way is removed like any other dead code, without a warning, and the failure shows up at run time: often as a property left unset, not as an exception.
@@ -166,6 +175,7 @@ Each build writes the namespaces that matched to `obj/{configuration}/{framework
 | `Squash_InternalsVisibleTo` | `Ignore` | `Honor` keeps every internal when the assembly has friends. |
 | `Squash_InternalNamespacesToKeep` | empty | Namespaces, by prefix, kept whole for [friends](#internal-namespaces-to-keep). |
 | `Squash_Preserve` | `None` | `DataShape` keeps the fields, property accessors and constructors of kept types. |
+| `Squash_TrimDocumentation` | `true` | `false` leaves the [documentation file](#documentation) as the compiler wrote it. |
 | `Squash_TreatWarningsAsErrors` | `$(TreatWarningsAsErrors)` | Whether a linker warning fails the build. |
 | `Squash_RootDescriptor` | none | Item. Descriptor files naming members to keep. |
 | `Squash_ExtraArgs` | empty | Appended to the linker's arguments, after Squash's own. |
@@ -207,7 +217,7 @@ Squash's own codes are in [docs/DiagnosticCodes.md](/docs/DiagnosticCodes.md).
 
 The package carries its own copy of the linker, copied unmodified from the [Microsoft.NET.ILLink.Tasks](https://www.nuget.org/packages/Microsoft.NET.ILLink.Tasks) package, so a given version of Squash trims the same way on every machine, SDK and target framework. The .NET SDK itself contains no linker, and restores that package only for some projects and at a version that varies by target framework.
 
-Squash talks to it through its command line and nothing else, plus four small steps loaded through the linker's `--custom-step` extension point, compiled against the exact linker they ship with. The arguments of the last run are in `obj/{configuration}/{framework}/Squash/squash.rsp`.
+Squash talks to it through its command line and nothing else, plus five small steps loaded through the linker's `--custom-step` extension point, compiled against the exact linker they ship with. The arguments of the last run are in `obj/{configuration}/{framework}/Squash/squash.rsp`.
 
 Linker patches arrive through Dependabot and are merged once the tests pass. The tests snapshot what survives trimming, on three target frameworks, so a linker that keeps or removes something different shows as a diff. A weekly workflow runs the same tests against the linker's prereleases and daily builds.
 

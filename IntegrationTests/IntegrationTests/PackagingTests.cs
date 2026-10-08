@@ -38,7 +38,15 @@ public class PackagingTests
     {
         var work = Consumer.Prepare("Library");
         var output = Path.Combine(work, "out");
-        var result = await Consumer.Dotnet(work, "pack", Path.Combine("Lib", "Lib.csproj"), arguments: ["--configuration", "Release", "--output", output]);
+        var result = await Consumer.Dotnet(
+            work,
+            "pack",
+            Path.Combine("Lib", "Lib.csproj"),
+            new Dictionary<string, string>
+            {
+                ["GenerateDocumentationFile"] = "true"
+            },
+            ["--configuration", "Release", "--output", output]);
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
 
         var nupkg = Directory.GetFiles(output, "*.nupkg").Single();
@@ -49,6 +57,13 @@ public class PackagingTests
             await archive.GetEntry($"lib/{framework}/Lib.dll")!.ExtractToFileAsync(extracted);
             await Assert.That(Consumer.HasType(extracted, "Lib.Api")).IsTrue();
             await Assert.That(Consumer.HasType(extracted, "Lib.UnusedInternal")).IsFalse();
+
+            // And the documentation that goes with it.
+            await using var entry = await archive.GetEntry($"lib/{framework}/Lib.xml")!.OpenAsync();
+            using var documentation = new StreamReader(entry);
+            var text = await documentation.ReadToEndAsync();
+            await Assert.That(text).Contains("\"T:Lib.Api\"");
+            await Assert.That(text).DoesNotContain("Lib.UnusedInternal");
         }
 
         // A development dependency: whoever installs Lib does not get Squash.

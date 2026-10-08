@@ -24,5 +24,8 @@
 --custom-step "-MarkStep:RestoreInternalsVisibleTo,/linker/Squash.Steps.dll"
 --custom-step "KeepDataShape,/linker/Squash.Steps.dll"
 --custom-step "-SweepStep:ReportRemoved,/linker/Squash.Steps.dll"
+--custom-data "Squash.AssemblyFile=App.exe"
+--custom-data "Squash.RemovedDocumentationFile=removed-documentation.txt"
+--custom-step "+OutputStep:RemovedDocumentation,/linker/Squash.Steps.dll"
 --enable-opt ipconstprop --verbose
 -out "/obj/Squash/out"

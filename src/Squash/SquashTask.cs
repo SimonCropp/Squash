@@ -28,6 +28,8 @@ public class SquashTask :
     public string KeyFile { get; set; } = "";
     public string KeyContainer { get; set; } = "";
     public string InternalNamespacesToKeep { get; set; } = "";
+    public string DocumentationFile { get; set; } = "";
+    public string TrimDocumentation { get; set; } = "";
 
     // The last lines the linker wrote, for the case where it fails without a diagnostic of its own.
     readonly Queue<string> output = new();
@@ -69,10 +71,11 @@ public class SquashTask :
         Validate();
 
         var extension = Path.GetExtension(AssemblyFile);
-        var input = Path.Combine(IntermediateDirectory, "in");
-        var outputDirectory = Path.Combine(IntermediateDirectory, "out");
+        var input = Path.Combine(IntermediateDirectory, ResponseFile.InputDirectory);
+        var outputDirectory = Path.Combine(IntermediateDirectory, ResponseFile.OutputDirectory);
         var friendsFile = Path.Combine(IntermediateDirectory, "friends.txt");
         var keptNamespacesFile = Path.Combine(IntermediateDirectory, "kept-namespaces.xml");
+        var removedDocumentationFile = Path.Combine(IntermediateDirectory, "removed-documentation.txt");
         var inputAssembly = Path.Combine(input, AssemblyName + extension);
         var inputSymbols = Path.Combine(input, AssemblyName + ".pdb");
         var outputAssembly = Path.Combine(outputDirectory, AssemblyName + extension);
@@ -84,6 +87,7 @@ public class SquashTask :
         Files.RecreateDirectory(outputDirectory);
         File.Delete(friendsFile);
         File.Delete(keptNamespacesFile);
+        File.Delete(removedDocumentationFile);
 
         // Moved, not copied. If anything below fails the compiler's output is gone from where the
         // build expects it, so the next build compiles again and cannot ship an untrimmed assembly.
@@ -113,6 +117,17 @@ public class SquashTask :
             descriptors.Add(keptNamespacesFile);
         }
 
+        // The documentation stays where it is while the linker runs: it is only read, and only
+        // once the trim has succeeded.
+        var trimDocumentation = Is(TrimDocumentation, "true") &&
+                                DocumentationFile.Length > 0 &&
+                                File.Exists(DocumentationFile);
+        var removedDocumentation = "";
+        if (trimDocumentation)
+        {
+            removedDocumentation = Path.GetFileName(removedDocumentationFile);
+        }
+
         var request = new SquashRequest
         {
             AssemblyName = AssemblyName,
@@ -127,6 +142,7 @@ public class SquashTask :
             // custom data on every '=', so a path containing one would be rejected.
             FriendsFile = Path.GetFileName(friendsFile),
             ReportFile = "removed.txt",
+            RemovedDocumentationFile = removedDocumentation,
             IgnoreInternalsVisibleTo = ignoreFriends,
             KeepDataShape = Is(Preserve, "DataShape"),
             WarningsAsErrors = Is(TreatWarningsAsErrors, "true"),
@@ -164,6 +180,14 @@ public class SquashTask :
 
         Resign(inputAssembly, outputAssembly);
 
+        // Worked out before anything is moved back, so that nothing is replaced unless all of it
+        // can be.
+        TrimmedDocumentation? documentation = null;
+        if (trimDocumentation)
+        {
+            documentation = ReadTrimmedDocumentation(removedDocumentationFile);
+        }
+
         var before = new FileInfo(inputAssembly).Length;
         var after = new FileInfo(outputAssembly).Length;
 
@@ -175,7 +199,12 @@ public class SquashTask :
 
         Log.LogMessage(
             MessageImportance.Normal,
-            $"Squash: {Path.GetFileName(AssemblyFile)} {before.ToString("N0", CultureInfo.InvariantCulture)} -> {after.ToString("N0", CultureInfo.InvariantCulture)} bytes.");
+            $"Squash: {Path.GetFileName(AssemblyFile)} {Number(before)} -> {Number(after)} bytes.");
+
+        if (documentation != null)
+        {
+            ReplaceDocumentation(documentation, input, outputDirectory);
+        }
 
         if (File.Exists(friendsFile))
         {
@@ -230,6 +259,55 @@ public class SquashTask :
 
         return matched;
     }
+
+    /// <summary>
+    /// The documentation file without the entries for what the linker removed, or null where there
+    /// is nothing to take out. The linker step lists the names; a name it did not list stays.
+    /// </summary>
+    TrimmedDocumentation? ReadTrimmedDocumentation(string removedFile)
+    {
+        var removed = new HashSet<string>(File.ReadAllLines(removedFile), StringComparer.Ordinal);
+        try
+        {
+            var trimmed = Documentation.Trim(File.ReadAllBytes(DocumentationFile), removed);
+            if (trimmed.Removed == 0)
+            {
+                return null;
+            }
+
+            return trimmed;
+        }
+        catch (InvalidDataException exception)
+        {
+            Report(
+                new(
+                    Diagnostics.DocumentationNotTrimmed,
+                    Severity.Warning,
+                    $"'{DocumentationFile}' is not the XML the compiler writes ({exception.Message}), so it has been left as it was and still documents members that have been removed. Set Squash_TrimDocumentation to false to leave the file alone."));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// What the compiler wrote goes beside the other originals, and the trimmed file takes its
+    /// place.
+    /// </summary>
+    void ReplaceDocumentation(TrimmedDocumentation documentation, string input, string outputDirectory)
+    {
+        var name = Path.GetFileName(DocumentationFile);
+        var before = new FileInfo(DocumentationFile).Length;
+        var trimmed = Path.Combine(outputDirectory, name);
+        File.WriteAllBytes(trimmed, documentation.Content);
+        Files.Move(DocumentationFile, Path.Combine(input, name));
+        Files.Move(trimmed, DocumentationFile);
+
+        Log.LogMessage(
+            MessageImportance.Normal,
+            $"Squash: {name} {Number(before)} -> {Number(documentation.Content.Length)} bytes, {Number(documentation.Removed)} entries removed.");
+    }
+
+    static string Number(long count) =>
+        count.ToString("N0", CultureInfo.InvariantCulture);
 
     void Validate()
     {

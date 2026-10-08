@@ -59,6 +59,7 @@ public class ResponseFileTests
             StepsAssembly = "/linker/Squash.Steps.dll",
             FriendsFile = "friends.txt",
             ReportFile = "removed.txt",
+            RemovedDocumentationFile = "removed-documentation.txt",
             IgnoreInternalsVisibleTo = true,
             KeepDataShape = true,
             WarningsAsErrors = true,
@@ -131,5 +132,20 @@ public class ResponseFileTests
         await Assert.That(keys["RootAssembly"]).IsEqualTo(ResponseFile.RootAssemblyKey);
         await Assert.That(keys["FriendsFile"]).IsEqualTo(ResponseFile.FriendsFileKey);
         await Assert.That(keys["ReportFile"]).IsEqualTo(ResponseFile.ReportFileKey);
+        await Assert.That(keys["AssemblyFile"]).IsEqualTo(ResponseFile.AssemblyFileKey);
+        await Assert.That(keys["RemovedDocumentationFile"]).IsEqualTo(ResponseFile.RemovedDocumentationFileKey);
+
+        // Not keys, but spelled out on both sides for the same reason.
+        await Assert.That(keys["InputDirectory"]).IsEqualTo(ResponseFile.InputDirectory);
+        await Assert.That(keys["OutputDirectory"]).IsEqualTo(ResponseFile.OutputDirectory);
+    }
+
+    [Test]
+    public async Task TheDocumentationStepRunsOnlyWhereThereIsDocumentation()
+    {
+        var lines = Lines(Request());
+
+        await Assert.That(lines).DoesNotContain("RemovedDocumentation");
+        await Assert.That(lines).DoesNotContain(ResponseFile.AssemblyFileKey);
     }
 }
