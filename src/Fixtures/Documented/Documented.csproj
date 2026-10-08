@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Every shape of member the compiler documents, each with a summary that says whether the
+         trim is expected to keep it. The documentation file is what the tests trim. -->
+    <TargetFrameworks>netstandard2.0;net48;net10.0</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+</Project>

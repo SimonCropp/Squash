@@ -171,3 +171,22 @@ be silenced for the project:
   <NoWarn>$(NoWarn);Squash011</NoWarn>
 </PropertyGroup>
 ```
+
+
+## Squash012
+
+**Documentation not trimmed.** Warning.
+
+The project's XML documentation file is not XML Squash can follow, so it has been left as it was.
+The assembly is trimmed all the same, and the file still has entries for members that are no longer
+in it. The message says what was wrong: an element that is never closed, an encoding other than
+UTF-8, or a document type declaration.
+
+The compiler writes none of those, so something rewrote the file between the compiler and Squash.
+Where that is intended, turn the trimming of [documentation](/readme.md#documentation) off:
+
+```xml
+<PropertyGroup>
+  <Squash_TrimDocumentation>false</Squash_TrimDocumentation>
+</PropertyGroup>
+```

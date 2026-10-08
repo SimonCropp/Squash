@@ -10,7 +10,7 @@ inside the package.
 
 - `src/Squash` - the task package. `netstandard2.0` only. Its build stages the linker into
   `bin/{Configuration}/illink`, which is what the package carries and what the tests run.
-- `src/Squash.Steps` - four linker steps, loaded by the linker through `--custom-step`. Targets the
+- `src/Squash.Steps` - five linker steps, loaded by the linker through `--custom-step`. Targets the
   linker's own framework, `net$(ILLinkMajor).0`.
 - `src/Fixtures` - libraries the behaviour tests trim. Outside the repository's build settings on
   purpose.
@@ -49,6 +49,19 @@ inside the package.
   each trim from the namespaces `Namespaces.Read` finds in the compiled assembly. It is never
   written for no namespaces: the linker reads an `<assembly>` element with no children as the whole
   assembly. Nothing is marked by a step for it.
+- An entry leaves the documentation file only when its name is in `removed-documentation.txt`,
+  which `RemovedDocumentation` writes after the linker's output: the names of everything in the
+  assembly under `in/`, less the names of everything in the one under `out/`, both from
+  `DocumentationIds`. Nothing is taken from marking. A name spelled differently from the compiler's
+  therefore matches nothing and its entry stays; no spelling mistake can remove the entry of a
+  member that is still there.
+- `DocumentationIds` spells names as the C# compiler does, and reads the files with
+  `System.Reflection.Metadata`, not Cecil. Every summary in the `Documented` fixture says `Kept.` or
+  `Removed.`, and `DocumentationTests.OnlyWhatIsLeftIsStillDocumented` holds the trimmed file to
+  that. A shape of member the fixture lacks goes into it, in a type that is removed.
+- `Documentation.Trim` only leaves bytes out. It never parses an entry and writes it again, so what
+  stays is what the compiler wrote; `DocumentationTests.WhatIsLeftIsExactlyAsTheCompilerWroteIt`
+  checks that against a second way of doing the same.
 - `--custom-data` values carry no path. The linker splits them on every `=`, so the steps get bare
   file names and resolve them against the working directory the task sets.
 - `-a` is given the assembly name, never a path, and the assembly is staged as
