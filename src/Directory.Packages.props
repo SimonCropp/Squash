@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="DiffEngine" Version="20.7.0" />
+    <PackageVersion Include="DiffEngine" Version="20.7.2" />
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.5.0" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="18.9.6" Pinned="true" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="18.9.6" Pinned="true" />
@@ -14,9 +14,9 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="Polyfill" Version="11.4.3" />
     <PackageVersion Include="ProjectDefaults" Version="1.0.184" />
-    <PackageVersion Include="TUnit" Version="1.72.16" />
-    <PackageVersion Include="Verify" Version="33.3.2-beta.1" />
-    <PackageVersion Include="Verify.TUnit" Version="33.3.2-beta.1" />
+    <PackageVersion Include="TUnit" Version="1.73.5" />
+    <PackageVersion Include="Verify" Version="33.3.2" />
+    <PackageVersion Include="Verify.TUnit" Version="33.3.2" />
   </ItemGroup>
   <!-- The canary workflow tests a linker that has not shipped yet. -->
   <ItemGroup Condition="'$(Squash_CanaryILLinkVersion)' != ''">
