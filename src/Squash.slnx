@@ -17,6 +17,7 @@
     <File Path="Fixtures/Directory.Build.props" />
     <File Path="Fixtures/Directory.Build.targets" />
     <Project Path="Fixtures/Dependency/Dependency.csproj" />
+    <Project Path="Fixtures/Documented/Documented.csproj" />
     <Project Path="Fixtures/EntryPoint/EntryPoint.csproj" />
     <Project Path="Fixtures/InternalsOnly/InternalsOnly.csproj" />
     <Project Path="Fixtures/PublicSigned/PublicSigned.csproj" />
