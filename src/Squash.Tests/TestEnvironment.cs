@@ -18,6 +18,12 @@ public static class TestEnvironment
     public static string LinkerDirectory =>
         Path.Combine(RepoRoot, "src", "Squash", "bin", Configuration, "illink");
 
+    /// <summary>
+    /// The major version of the staged linker. The canary workflow stages one newer than the pinned.
+    /// </summary>
+    public static int LinkerMajor =>
+        AssemblyName.GetAssemblyName(Path.Combine(LinkerDirectory, "illink.dll")).Version!.Major;
+
     public static string TargetsFile =>
         Path.Combine(RepoRoot, "src", "Squash", "build", "Squash.targets");
 
