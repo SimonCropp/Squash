@@ -79,13 +79,27 @@ jobs:
           sed -i 's/"latestFeature"/"latestMajor"/' global.json IntegrationTests/global.json
           dotnet --version
 
+      # dotnet/runtime's main branch moves to a new major before the daily SDK can target it. Until
+      # the SDK catches up Squash.Steps cannot be compiled, which says nothing about the linker.
+      - name: Check the SDK can target the linker's framework
+        id: sdk
+        if: steps.linker.outputs.current != 'true'
+        shell: bash
+        run: |
+          maximum=$(dotnet msbuild src/Squash.Steps/Squash.Steps.csproj -getProperty:NETCoreAppMaximumVersion)
+          echo "The SDK targets up to net$maximum. The linker needs net${{ steps.linker.outputs.major }}.0."
+          if [ "${maximum%%.*}" -lt "${{ steps.linker.outputs.major }}" ]; then
+            echo "::notice::Skipped: SDK $(dotnet --version) targets up to net$maximum, and linker ${{ steps.linker.outputs.version }} needs net${{ steps.linker.outputs.major }}.0."
+            echo "unsupported=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Add the daily feed
-        if: steps.linker.outputs.current != 'true' && matrix.channel == 'daily'
+        if: steps.linker.outputs.current != 'true' && steps.sdk.outputs.unsupported != 'true' && matrix.channel == 'daily'
         shell: bash
         run: cp .github/linker-canary.nuget.config src/nuget.config
 
       - name: Build src
-        if: steps.linker.outputs.current != 'true'
+        if: steps.linker.outputs.current != 'true' && steps.sdk.outputs.unsupported != 'true'
         run: >
           dotnet build src --configuration Release
           -p:Squash_CanaryILLinkVersion=${{ steps.linker.outputs.version }}
@@ -93,12 +107,12 @@ jobs:
 
       # A snapshot that no longer matches is the linker keeping or removing something different.
       - name: Test
-        if: steps.linker.outputs.current != 'true'
+        if: steps.linker.outputs.current != 'true' && steps.sdk.outputs.unsupported != 'true'
         run: dotnet run --project src/Squash.Tests --configuration Release --no-build -- --no-ansi --progress off
 
       - name: Build integration tests
         id: build-integration
-        if: ${{ !cancelled() && steps.linker.outputs.current != 'true' }}
+        if: ${{ !cancelled() && steps.linker.outputs.current != 'true' && steps.sdk.outputs.unsupported != 'true' }}
         run: dotnet build IntegrationTests --configuration Release
 
       - name: Test integration

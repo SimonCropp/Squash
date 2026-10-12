@@ -244,19 +244,34 @@ public class TrimTests
                 """);
 
     [Test]
-    public Task WhatTheSymbolsCarryAfter() =>
+    public Task WhatTheSymbolsCarryAfter()
+    {
         // The compiler's record of how the assembly was built comes through. So does the embedded
         // source of the one file that holds code. The other three files hold only assembly
-        // attributes and usings, and the linker's rewrite drops the source embedded for them: a
-        // known limit, pinned here so that a linker which fixes it shows as a change. The type
-        // that needed a document of its own was removed.
-        Verify(AssemblyDump.Symbols(Trims.Signed("netstandard2.0").Assembly))
+        // attributes and usings, and before 11 the linker's rewrite drops the source embedded for
+        // them: a known limit, pinned here so that a linker which fixes it shows as a change. The
+        // type that needed a document of its own was removed.
+        var symbols = AssemblyDump.Symbols(Trims.Signed("netstandard2.0").Assembly);
+        if (TestEnvironment.LinkerMajor < 11)
+        {
+            return Verify(symbols)
+                .Snapshot(
+                    """
+                    CompilationMetadataReferences on ModuleDefinition: 1
+                    CompilationOptions on ModuleDefinition: 1
+                    EmbeddedSource on Document: 1
+                    """);
+        }
+
+        // From 11 the source embedded for every file comes through.
+        return Verify(symbols)
             .Snapshot(
                 """
                 CompilationMetadataReferences on ModuleDefinition: 1
                 CompilationOptions on ModuleDefinition: 1
-                EmbeddedSource on Document: 1
+                EmbeddedSource on Document: 4
                 """);
+    }
 
     [Test]
     public async Task ASignedAssemblyWithoutItsKeyFails()
@@ -378,8 +393,10 @@ public class TrimTests
         var linker = CopyLinker(temp);
         var config = Path.Combine(linker, "illink.runtimeconfig.json");
         var text = await File.ReadAllTextAsync(config);
-        var major = AssemblyName.GetAssemblyName(Path.Combine(linker, "illink.dll")).Version!.Major;
-        await File.WriteAllTextAsync(config, text.Replace($"\"{major}.0.0\"", "\"99.0.0\"").Replace($"net{major}.0", "net99.0"));
+        // The whole version, not the major: a prerelease linker is staged with the runtimeconfig it
+        // shipped with, which names its own prerelease runtime.
+        text = System.Text.RegularExpressions.Regex.Replace(text, "\"version\": *\"[^\"]*\"", "\"version\": \"99.0.0\"");
+        await File.WriteAllTextAsync(config, text.Replace($"net{TestEnvironment.LinkerMajor}.0", "net99.0"));
 
         using var trimmed = Trimmed.Run("Scenarios", "netstandard2.0", _ => _.LinkerDirectory = linker);
 
