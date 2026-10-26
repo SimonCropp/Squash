@@ -1,3 +1,5 @@
+using System.Text.Json.Nodes;
+
 /// <summary>
 /// Things that have to stay in step with each other and that nothing else would notice drifting.
 /// </summary>
@@ -90,7 +92,16 @@ public class StructureTests
         var linker = AssemblyName.GetAssemblyName(Path.Combine(directory, "illink.dll")).Version!.Major;
 
         var config = await File.ReadAllTextAsync(Path.Combine(directory, "illink.runtimeconfig.json"));
-        await Assert.That(config).Contains($"\"tfm\": \"net{linker}.0\"");
+        var options = JsonNode.Parse(config)!["runtimeOptions"]!;
+        var framework = (string)options["framework"]!["version"]!;
+        await Assert.That(framework).StartsWith($"{linker}.");
+
+        // A prerelease linker (the canary) ships its own runtimeconfig, whose tfm can lag a major
+        // behind the runtime it asks for. The framework version is what decides where it starts.
+        if (!framework.Contains('-'))
+        {
+            await Assert.That((string)options["tfm"]!).IsEqualTo($"net{linker}.0");
+        }
 
         // The steps load into the linker's process, so they cannot target a newer framework than it.
         await Assert.That(TargetFramework(Path.Combine(directory, "Squash.Steps.dll"))).IsEqualTo($".NETCoreApp,Version=v{linker}.0");
