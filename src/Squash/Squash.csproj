@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- netstandard2.0 only, and loaded by every host. It works under MSBuild on .NET Framework
-         and under MSBuild on .NET of any version, which a net10.0 asset does not. The linker
+         and under MSBuild on .NET of any version, which a net11.0 asset does not. The linker
          itself never loads here: the task starts it as a process. -->
     <TargetFramework>netstandard2.0</TargetFramework>
     <IncludeBuildOutput>false</IncludeBuildOutput>

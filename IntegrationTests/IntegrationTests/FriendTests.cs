@@ -69,10 +69,10 @@ public class FriendTests
         await Assert.That(result.Cli.Combined).Contains("except in Lib, which Squash_InternalNamespacesToKeep keeps whole");
 
         // The namespace is kept whole, and what is outside it is trimmed as before.
-        var library = result.Output("Friend", "net10.0", "Lib.dll");
+        var library = result.Output("Friend", "net11.0", "Lib.dll");
         await Assert.That(Consumer.HasType(library, "Lib.UnusedInternal")).IsTrue();
         await Assert.That(Consumer.HasType(library, "Vendored.Helper")).IsFalse();
-        await Assert.That(Consumer.HasType(result.Squash("Lib", "net10.0", Path.Combine("in", "Lib.dll")), "Vendored.Helper")).IsTrue();
+        await Assert.That(Consumer.HasType(result.Squash("Lib", "net11.0", Path.Combine("in", "Lib.dll")), "Vendored.Helper")).IsTrue();
     }
 
     [Test]
@@ -87,7 +87,7 @@ public class FriendTests
         var result = await Consumer.Rebuild(work, Path.Combine("App", "App.csproj"), arguments: ["-v:normal"]);
 
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
-        await Assert.That(File.Exists(result.Squash("Lib", "net10.0", "friends.txt"))).IsFalse();
-        await Assert.That(result.Cli.Stdout).Contains(Path.Combine("Lib", "obj", "Release", "net10.0", "ref", "Lib.dll"));
+        await Assert.That(File.Exists(result.Squash("Lib", "net11.0", "friends.txt"))).IsFalse();
+        await Assert.That(result.Cli.Stdout).Contains(Path.Combine("Lib", "obj", "Release", "net11.0", "ref", "Lib.dll"));
     }
 }

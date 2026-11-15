@@ -124,7 +124,7 @@ public class ValidityTests
     [Test]
     [Arguments("netstandard2.0")]
     [Arguments("net48")]
-    [Arguments("net10.0")]
+    [Arguments("net11.0")]
     public async Task TheSameInputGivesTheSameBytes(string framework)
     {
         // Two separate runs in two separate directories.

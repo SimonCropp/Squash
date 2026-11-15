@@ -30,7 +30,7 @@ public class HostTests
         var result = new BuildResult(cli, work);
 
         await Assert.That(cli.ExitCode).IsEqualTo(0).Because(cli.Combined);
-        foreach (var framework in new[] { "netstandard2.0", "net10.0" })
+        foreach (var framework in new[] { "netstandard2.0", "net11.0" })
         {
             await Assert.That(Consumer.HasType(result.Output("Lib", framework, "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
         }

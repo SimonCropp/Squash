@@ -94,7 +94,7 @@ public class StrongNameTests
     [Test]
     [Arguments("Signed", "netstandard2.0")]
     [Arguments("Signed", "net48")]
-    [Arguments("Scenarios", "net10.0")]
+    [Arguments("Scenarios", "net11.0")]
     public async Task ThePeReaderAgreesWithSystemReflectionMetadata(string name, string framework) =>
         await AgreesWithSystemReflectionMetadata(await File.ReadAllBytesAsync(Fixture(name, framework)), PEMagic.PE32);
 

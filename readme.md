@@ -40,7 +40,7 @@ By default Squash runs when all of these hold:
 
 `Squash_Enabled` set to `true` or `false` overrides all of that. An executable that opts in has its entry point kept.
 
-The build machine needs a .NET 10 or later runtime, which the .NET 10 SDK includes. The linker runs on it whatever the project targets, and whether the build is `dotnet build` or `msbuild.exe`.
+The build machine needs a .NET 11 or later runtime, which the .NET 11 SDK includes. The linker runs on it whatever the project targets, and whether the build is `dotnet build` or `msbuild.exe`.
 
 
 ## What is kept

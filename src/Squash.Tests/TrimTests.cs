@@ -16,7 +16,7 @@ public class TrimTests
     [Test]
     [Arguments("netstandard2.0")]
     [Arguments("net48")]
-    [Arguments("net10.0")]
+    [Arguments("net11.0")]
     public async Task Survivors(string framework)
     {
         var trimmed = Trims.Scenarios(framework);
@@ -28,7 +28,7 @@ public class TrimTests
     [Test]
     [Arguments("netstandard2.0")]
     [Arguments("net48")]
-    [Arguments("net10.0")]
+    [Arguments("net11.0")]
     public Task Removed(string framework) =>
         Verify(Trims.Scenarios(framework).Removed);
 
@@ -135,7 +135,7 @@ public class TrimTests
     [Test]
     [Arguments("netstandard2.0")]
     [Arguments("net48")]
-    [Arguments("net10.0")]
+    [Arguments("net11.0")]
     public async Task ADependencysConstantIsNotFoldedIn(string framework)
     {
         const string method = "Scenarios.Constants::Describe() : string";
@@ -305,7 +305,7 @@ public class TrimTests
     [Test]
     public async Task AnExecutableKeepsItsEntryPoint()
     {
-        using var trimmed = Trimmed.Run("EntryPoint", "net10.0", _ => _.RootEntryPoint = "true");
+        using var trimmed = Trimmed.Run("EntryPoint", "net11.0", _ => _.RootEntryPoint = "true");
 
         await Assert.That(trimmed.Succeeded).IsTrue();
         await Assert.That(Checks.HasEntryPoint(trimmed.Assembly)).IsTrue();
@@ -323,7 +323,7 @@ public class TrimTests
     public async Task WithoutItsEntryPointRootedAnExecutableKeepsNothing()
     {
         // Why the entry point is rooted as well: a top-level program has no public type at all.
-        using var trimmed = Trimmed.Run("EntryPoint", "net10.0");
+        using var trimmed = Trimmed.Run("EntryPoint", "net11.0");
 
         await Assert.That(trimmed.Succeeded).IsFalse();
         await Assert.That(trimmed.ErrorCodes.Single()).IsEqualTo(Diagnostics.NothingReachable);
