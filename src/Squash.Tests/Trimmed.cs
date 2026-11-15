@@ -118,7 +118,7 @@ public static class Trims
 {
     static ConcurrentDictionary<string, Lazy<Trimmed>> cache = new();
 
-    public static string[] Frameworks = ["netstandard2.0", "net48", "net10.0"];
+    public static string[] Frameworks = ["netstandard2.0", "net48", "net11.0"];
 
     public static string Roots(string framework) =>
         Path.Combine(TestEnvironment.Fixture("Scenarios", framework), "roots.xml");

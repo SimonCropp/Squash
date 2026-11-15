@@ -51,7 +51,7 @@ public class PackagingTests
 
         var nupkg = Directory.GetFiles(output, "*.nupkg").Single();
         await using var archive = await ZipFile.OpenReadAsync(nupkg);
-        foreach (var framework in new[] { "netstandard2.0", "net10.0" })
+        foreach (var framework in new[] { "netstandard2.0", "net11.0" })
         {
             var extracted = Path.Combine(output, framework + ".dll");
             await archive.GetEntry($"lib/{framework}/Lib.dll")!.ExtractToFileAsync(extracted);
@@ -111,9 +111,9 @@ public class PackagingTests
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
 
         const string sourceLink = "SourceLink on ModuleDefinition: 1";
-        var compiled = result.Squash("Lib", "net10.0", Path.Combine("in", "Lib.dll"));
+        var compiled = result.Squash("Lib", "net11.0", Path.Combine("in", "Lib.dll"));
         await Assert.That(AssemblyDump.Symbols(compiled)).Contains(sourceLink);
-        await Assert.That(AssemblyDump.Symbols(result.Output("Lib", "net10.0", "Lib.dll"))).Contains(sourceLink);
+        await Assert.That(AssemblyDump.Symbols(result.Output("Lib", "net11.0", "Lib.dll"))).Contains(sourceLink);
     }
 
     [Test]
@@ -124,11 +124,11 @@ public class PackagingTests
 
         // Nothing calls MethodTimeLogger until the weaver has run. Trimmed first, it would be gone
         // before the weaver looked for it.
-        var library = result.Output("App", "net10.0", "Lib.dll");
+        var library = result.Output("App", "net11.0", "Lib.dll");
         await Assert.That(Consumer.HasType(library, "Lib.MethodTimeLogger")).IsTrue();
         await Assert.That(Consumer.HasType(library, "Lib.UnusedInternal")).IsFalse();
 
-        var run = await CliRunner.Run("dotnet", [result.Output("App", "net10.0", "App.dll")], result.Work);
+        var run = await CliRunner.Run("dotnet", [result.Output("App", "net11.0", "App.dll")], result.Work);
         await Assert.That(run.ExitCode).IsEqualTo(0).Because(run.Combined);
         await Assert.That(run.Stdout).Contains("timed Work");
         await Assert.That(run.Stdout).Contains("worked");

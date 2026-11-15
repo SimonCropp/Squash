@@ -5,7 +5,7 @@
 public class LibraryTests
 {
     static readonly string project = Path.Combine("Lib", "Lib.csproj");
-    static readonly string[] frameworks = ["netstandard2.0", "net10.0"];
+    static readonly string[] frameworks = ["netstandard2.0", "net11.0"];
 
     static Dictionary<string, string> With(string name, string value = "true") =>
         new()
@@ -37,8 +37,8 @@ public class LibraryTests
         var first = await Consumer.Build("Library", project);
         await Assert.That(first.Cli.ExitCode).IsEqualTo(0).Because(first.Cli.Combined);
 
-        var stamp = first.Squash("Lib", "net10.0", "squash.stamp");
-        var assembly = first.Output("Lib", "net10.0", "Lib.dll");
+        var stamp = first.Squash("Lib", "net11.0", "squash.stamp");
+        var assembly = first.Output("Lib", "net11.0", "Lib.dll");
         var stamped = File.GetLastWriteTimeUtc(stamp);
         var written = File.GetLastWriteTimeUtc(assembly);
 
@@ -50,8 +50,8 @@ public class LibraryTests
             await Assert.That(next.Cli.ExitCode).IsEqualTo(0).Because(next.Cli.Combined);
             await Assert.That(File.GetLastWriteTimeUtc(stamp)).IsEqualTo(stamped).Because($"build {build}");
             await Assert.That(File.GetLastWriteTimeUtc(assembly)).IsEqualTo(written).Because($"build {build}");
-            await Assert.That(File.Exists(first.Squash("Lib", "net10.0", "friends.txt"))).IsTrue().Because($"build {build}");
-            await Assert.That(File.Exists(first.Squash("Lib", "net10.0", "removed.txt"))).IsTrue().Because($"build {build}");
+            await Assert.That(File.Exists(first.Squash("Lib", "net11.0", "friends.txt"))).IsTrue().Because($"build {build}");
+            await Assert.That(File.Exists(first.Squash("Lib", "net11.0", "removed.txt"))).IsTrue().Because($"build {build}");
         }
     }
 
@@ -65,8 +65,8 @@ public class LibraryTests
         var second = await Consumer.Rebuild(first.Work, project);
 
         await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
-        await Assert.That(await File.ReadAllTextAsync(second.Squash("Lib", "net10.0", "removed.txt"))).Contains("type Lib.AddedLater");
-        await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.AddedLater")).IsFalse();
+        await Assert.That(await File.ReadAllTextAsync(second.Squash("Lib", "net11.0", "removed.txt"))).Contains("type Lib.AddedLater");
+        await Assert.That(Consumer.HasType(second.Output("Lib", "net11.0", "Lib.dll"), "Lib.AddedLater")).IsFalse();
     }
 
     [Test]
@@ -74,14 +74,14 @@ public class LibraryTests
     {
         var first = await Consumer.Build("Library", project);
         await Assert.That(first.Cli.ExitCode).IsEqualTo(0).Because(first.Cli.Combined);
-        await Assert.That(File.Exists(first.Squash("Lib", "net10.0", "friends.txt"))).IsTrue();
+        await Assert.That(File.Exists(first.Squash("Lib", "net11.0", "friends.txt"))).IsTrue();
 
         // No file changed. Only the recorded settings tell the build it has work to do.
         var second = await Consumer.Rebuild(first.Work, project, With("Squash_InternalsVisibleTo", "Honor"));
 
         await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
-        await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
-        await Assert.That(File.Exists(second.Squash("Lib", "net10.0", "friends.txt"))).IsFalse();
+        await Assert.That(Consumer.HasType(second.Output("Lib", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
+        await Assert.That(File.Exists(second.Squash("Lib", "net11.0", "friends.txt"))).IsFalse();
     }
 
     [Test]
@@ -89,13 +89,13 @@ public class LibraryTests
     {
         var first = await Consumer.Build("Library", project, With("Roots"));
         await Assert.That(first.Cli.ExitCode).IsEqualTo(0).Because(first.Cli.Combined);
-        await Assert.That(Consumer.HasType(first.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
+        await Assert.That(Consumer.HasType(first.Output("Lib", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
 
         await File.WriteAllTextAsync(Path.Combine(first.Work, "Lib", "roots.xml"), "<linker>\n</linker>\n");
         var second = await Consumer.Rebuild(first.Work, project, With("Roots"));
 
         await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
-        await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
+        await Assert.That(Consumer.HasType(second.Output("Lib", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
     }
 
     [Test]
@@ -107,11 +107,11 @@ public class LibraryTests
         var second = await Consumer.Rebuild(first.Work, project, With("Squash_Enabled", "false"));
 
         await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
-        await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
+        await Assert.That(Consumer.HasType(second.Output("Lib", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsTrue();
 
         // Nothing left over that describes an assembly which is no longer trimmed.
         var left = Directory
-            .GetFiles(Path.GetDirectoryName(second.Squash("Lib", "net10.0", "inputs.txt"))!, "*", SearchOption.AllDirectories)
+            .GetFiles(Path.GetDirectoryName(second.Squash("Lib", "net11.0", "inputs.txt"))!, "*", SearchOption.AllDirectories)
             .Select(Path.GetFileName)
             .ToList();
         await Assert.That(left.SequenceEqual(["inputs.txt"])).IsTrue().Because(string.Join(", ", left));
@@ -140,7 +140,7 @@ public class LibraryTests
         }
 
         // A build with nothing to do does not put the compiler's file back, or write it again.
-        var file = first.Output("Lib", "net10.0", "Lib.xml");
+        var file = first.Output("Lib", "net11.0", "Lib.xml");
         var written = File.GetLastWriteTimeUtc(file);
         for (var build = 2; build <= 3; build++)
         {
@@ -148,7 +148,7 @@ public class LibraryTests
             await Assert.That(next.Cli.ExitCode).IsEqualTo(0).Because(next.Cli.Combined);
             await Assert.That(File.GetLastWriteTimeUtc(file)).IsEqualTo(written).Because($"build {build}");
             await Assert.That(await File.ReadAllTextAsync(file)).DoesNotContain("Lib.UnusedInternal").Because($"build {build}");
-            await Assert.That(File.Exists(first.Squash("Lib", "net10.0", "removed-documentation.txt"))).IsTrue().Because($"build {build}");
+            await Assert.That(File.Exists(first.Squash("Lib", "net11.0", "removed-documentation.txt"))).IsTrue().Because($"build {build}");
         }
     }
 
@@ -159,7 +159,7 @@ public class LibraryTests
         var first = await Consumer.Build("Library", project, properties);
         await Assert.That(first.Cli.ExitCode).IsEqualTo(0).Because(first.Cli.Combined);
 
-        var file = first.Output("Lib", "net10.0", "Lib.xml");
+        var file = first.Output("Lib", "net11.0", "Lib.xml");
         await Assert.That(await File.ReadAllTextAsync(file)).DoesNotContain("Lib.UnusedInternal");
 
         // No file changed. The setting alone has the compiler write the documentation again.
@@ -168,8 +168,8 @@ public class LibraryTests
 
         await Assert.That(second.Cli.ExitCode).IsEqualTo(0).Because(second.Cli.Combined);
         await Assert.That(await File.ReadAllTextAsync(file)).Contains("\"T:Lib.UnusedInternal\"");
-        await Assert.That(File.Exists(second.Squash("Lib", "net10.0", "removed-documentation.txt"))).IsFalse();
-        await Assert.That(Consumer.HasType(second.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
+        await Assert.That(File.Exists(second.Squash("Lib", "net11.0", "removed-documentation.txt"))).IsFalse();
+        await Assert.That(Consumer.HasType(second.Output("Lib", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
     }
 
     [Test]
@@ -178,8 +178,8 @@ public class LibraryTests
         var result = await Consumer.Build("Library", project, configuration: "Debug");
 
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
-        await Assert.That(Consumer.HasType(result.Output("Lib", "net10.0", "Lib.dll", "Debug"), "Lib.UnusedInternal")).IsTrue();
-        await Assert.That(File.Exists(result.Squash("Lib", "net10.0", "squash.stamp", "Debug"))).IsFalse();
+        await Assert.That(Consumer.HasType(result.Output("Lib", "net11.0", "Lib.dll", "Debug"), "Lib.UnusedInternal")).IsTrue();
+        await Assert.That(File.Exists(result.Squash("Lib", "net11.0", "squash.stamp", "Debug"))).IsFalse();
     }
 
     [Test]
@@ -188,7 +188,7 @@ public class LibraryTests
         var result = await Consumer.Build("Library", project, With("Squash_Enabled"), "Debug");
 
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
-        await Assert.That(Consumer.HasType(result.Output("Lib", "net10.0", "Lib.dll", "Debug"), "Lib.UnusedInternal")).IsFalse();
+        await Assert.That(Consumer.HasType(result.Output("Lib", "net11.0", "Lib.dll", "Debug"), "Lib.UnusedInternal")).IsFalse();
     }
 
     [Test]
@@ -198,9 +198,9 @@ public class LibraryTests
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
 
         // The copy beside the application is the trimmed one.
-        await Assert.That(Consumer.HasType(result.Output("App", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
+        await Assert.That(Consumer.HasType(result.Output("App", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
 
-        var run = await CliRunner.Run("dotnet", [result.Output("App", "net10.0", "App.dll")], result.Work);
+        var run = await CliRunner.Run("dotnet", [result.Output("App", "net11.0", "App.dll")], result.Work);
         await Assert.That(run.ExitCode).IsEqualTo(0).Because(run.Combined);
         await Assert.That(run.Stdout.Trim()).IsEqualTo("kept");
     }
@@ -214,11 +214,11 @@ public class LibraryTests
         await Assert.That(failed.Cli.Combined).Contains("missing.xml");
 
         // Not where the build would pick it up and ship it untrimmed.
-        await Assert.That(File.Exists(failed.Intermediate("Lib", "net10.0", "Lib.dll"))).IsFalse();
+        await Assert.That(File.Exists(failed.Intermediate("Lib", "net11.0", "Lib.dll"))).IsFalse();
 
         var recovered = await Consumer.Rebuild(failed.Work, project);
         await Assert.That(recovered.Cli.ExitCode).IsEqualTo(0).Because(recovered.Cli.Combined);
-        await Assert.That(Consumer.HasType(recovered.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
+        await Assert.That(Consumer.HasType(recovered.Output("Lib", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
     }
 
     [Test]
@@ -303,7 +303,7 @@ public class LibraryTests
         var result = await Consumer.Rebuild(work, project);
 
         await Assert.That(result.Cli.ExitCode).IsEqualTo(0).Because(result.Cli.Combined);
-        await Assert.That(Consumer.HasType(result.Output("Lib", "net10.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
+        await Assert.That(Consumer.HasType(result.Output("Lib", "net11.0", "Lib.dll"), "Lib.UnusedInternal")).IsFalse();
     }
 
     [Test]
@@ -322,7 +322,7 @@ public class LibraryTests
             new Dictionary<string, string>
             {
                 ["Configuration"] = "Release",
-                ["TargetFramework"] = "net10.0",
+                ["TargetFramework"] = "net11.0",
                 ["DesignTimeBuild"] = "true",
                 ["BuildingProject"] = "false",
                 ["SkipCompilerExecution"] = "true",
@@ -331,6 +331,6 @@ public class LibraryTests
             ["-t:Compile"]);
 
         await Assert.That(design.Cli.ExitCode).IsEqualTo(0).Because(design.Cli.Combined);
-        await Assert.That(Directory.Exists(Path.GetDirectoryName(design.Squash("Lib", "net10.0", "inputs.txt"))!)).IsFalse();
+        await Assert.That(Directory.Exists(Path.GetDirectoryName(design.Squash("Lib", "net11.0", "inputs.txt"))!)).IsFalse();
     }
 }

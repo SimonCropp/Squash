@@ -18,7 +18,7 @@
     <!-- The major version of the bundled linker (Microsoft.NET.ILLink.Tasks in
          Directory.Packages.props). It decides the framework Squash.Steps targets and the framework
          illink.runtimeconfig.json asks for, so the three move together; a test checks they agree. -->
-    <ILLinkMajor Condition="'$(ILLinkMajor)' == ''">10</ILLinkMajor>
+    <ILLinkMajor Condition="'$(ILLinkMajor)' == ''">11</ILLinkMajor>
   </PropertyGroup>
   <!-- Set here rather than in the csproj: ProjectDefaults.props decides whether to pack before the
        csproj body is evaluated. -->

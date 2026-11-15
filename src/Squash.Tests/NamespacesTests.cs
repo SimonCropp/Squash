@@ -73,7 +73,7 @@ public class NamespacesTests
     [Test]
     public async Task TheGlobalNamespaceAndNestedTypesAddNothing()
     {
-        var path = Path.Combine(TestEnvironment.Fixture("Scenarios", "net10.0"), "Scenarios.dll");
+        var path = Path.Combine(TestEnvironment.Fixture("Scenarios", "net11.0"), "Scenarios.dll");
         var namespaces = Namespaces.Read(await File.ReadAllBytesAsync(path));
 
         await Assert.That(namespaces).Contains("Scenarios");
