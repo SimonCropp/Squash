@@ -3,6 +3,17 @@ using System.Collections;
 // ReSharper disable EmptyDestructor
 // ReSharper disable RedundantNameQualifier
 // ReSharper disable UnusedTypeParameter
+// ReSharper disable InconsistentNaming
+// ReSharper disable TypeParameterCanBeVariant
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedType.Global
+// ReSharper disable MoveToExtensionBlock
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable StaticMemberInGenericType
+// ReSharper disable NotAccessedField.Global
+// ReSharper disable ConvertToStaticClass
 
 namespace Documented;
 

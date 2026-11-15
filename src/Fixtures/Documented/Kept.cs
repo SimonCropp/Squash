@@ -1,5 +1,9 @@
 using System.Collections;
 // ReSharper disable UnusedParameter.Local
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable InconsistentNaming
 
 namespace Documented;
 
