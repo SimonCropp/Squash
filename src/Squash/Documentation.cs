@@ -86,7 +86,7 @@ public static class Documentation
                 var close = After(xml, position + 2, ">");
                 var closed = Text(xml, position + 2, close - 1).Trim();
                 if (open.Count == 0 ||
-                    open[open.Count - 1] != closed)
+                    open[^1] != closed)
                 {
                     throw new InvalidDataException($"'</{closed}>' does not close the element it is in");
                 }
@@ -127,16 +127,14 @@ public static class Documentation
 
         if (open.Count > 0)
         {
-            throw new InvalidDataException($"'<{open[open.Count - 1]}>' is never closed");
+            throw new InvalidDataException($"'<{open[^1]}>' is never closed");
         }
 
         return members;
     }
 
     static bool InMembers(List<string> open) =>
-        open.Count == 2 &&
-        open[0] == "doc" &&
-        open[1] == "members";
+        open is ["doc", "members"];
 
     /// <summary>
     /// Past a byte order mark. The markup of UTF-8 is single bytes that appear nowhere inside a
@@ -145,10 +143,7 @@ public static class Documentation
     /// </summary>
     static int Start(byte[] xml)
     {
-        if (xml.Length >= 3 &&
-            xml[0] == 0xEF &&
-            xml[1] == 0xBB &&
-            xml[2] == 0xBF)
+        if (xml is [0xEF, 0xBB, 0xBF, ..])
         {
             return 3;
         }

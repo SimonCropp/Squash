@@ -1,4 +1,8 @@
 using System.Collections;
+// ReSharper disable UnusedParameter.Local
+// ReSharper disable EmptyDestructor
+// ReSharper disable RedundantNameQualifier
+// ReSharper disable UnusedTypeParameter
 
 namespace Documented;
 
@@ -254,17 +258,13 @@ unsafe class Removed<T> :
 class Outer<T>
 {
     /// <summary>Removed.</summary>
-    public class Plain
-    {
-    }
+    public class Plain;
 
     /// <summary>Removed.</summary>
     public class Inner<U>
     {
         /// <summary>Removed.</summary>
-        public class Innermost
-        {
-        }
+        public class Innermost;
     }
 }
 

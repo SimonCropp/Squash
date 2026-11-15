@@ -1,4 +1,5 @@
 using System.Collections;
+// ReSharper disable UnusedParameter.Local
 
 namespace Documented;
 

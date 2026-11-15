@@ -1,3 +1,6 @@
+// ReSharper disable UnusedParameter.Local
+// ReSharper disable UnusedTypeParameter
+// ReSharper disable MemberCanBeMadeStatic.Local
 namespace Documented;
 
 // A type that stays while some of its members go. The members that go share a name with one that
@@ -74,9 +77,7 @@ public class Partly
         0;
 
     /// <summary>Kept.</summary>
-    public class Nested
-    {
-    }
+    public class Nested;
 
     /// <summary>Removed.</summary>
     class UnusedNested
